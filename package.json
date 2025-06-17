@@ -10,7 +10,8 @@
     "group-expenses",
     "react",
     "typescript"
-  ],  "author": "Nisham Ghimire",
+  ],
+  "author": "Nisham Ghimire",
   "license": "MIT",
   "repository": {
     "type": "git",

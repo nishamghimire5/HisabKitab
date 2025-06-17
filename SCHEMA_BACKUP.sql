@@ -222,8 +222,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
         INSERT WITH CHECK
             (
             inviter_id
-        = auth.uid
-        () AND
+            = auth.uid
+            () AND
         trip_id IN
         (
             SELECT id
@@ -248,8 +248,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
         CREATE POLICY "Users can create friend requests" ON public.user_friends
     FOR
         INSERT WITH CHECK
-            (user_id = auth.ui
-        ()
+            (user_id = a
+        th.ui
+            ()
       
           );
 
