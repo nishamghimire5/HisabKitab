@@ -1,13 +1,13 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Calculator, Mail, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Calculator, Mail, AlertCircle, BookOpen, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Auth = () => {
@@ -81,10 +81,37 @@ const Auth = () => {
       setLoading(false);
     }
   };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Navigation Bar */}
+      <nav className="w-full p-4 bg-white/80 backdrop-blur-sm border-b border-white/20">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calculator className="w-6 h-6 text-blue-500" />
+            <span className="text-xl font-display font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              HisabKitab
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link to="/docs">
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-blue-600">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Guide
+              </Button>
+            </Link>
+            <Link to="/about">
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-blue-600">
+                <Info className="w-4 h-4 mr-2" />
+                About
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Auth Card */}
+      <div className="flex items-center justify-center p-4 pt-8">
+        <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm">
         <CardHeader className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
             <Calculator className="w-8 h-8 text-blue-500" />
@@ -214,13 +241,13 @@ const Auth = () => {
                   }
                 }}
                 className="text-xs text-gray-500 hover:text-gray-700"
-              >
-                Need to verify your email?
+              >                Need to verify your email?
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
