@@ -46,15 +46,11 @@ const InvitationNotifications = () => {
     loadInvitations();
   }, [user]);  const loadInvitations = async () => {
     try {
-      console.log('Loading invitations for user:', user?.email, 'User ID:', user?.id);
-      
       // First, let's check if there are any invitations at all for this user
       const { data: allInvitations, error: allError } = await supabase
         .from('trip_invitations')
         .select('*')
         .or(`invited_email.eq.${user?.email},invited_user_id.eq.${user?.id}`);
-      
-      console.log('All invitations for user (email or ID):', allInvitations, 'Error:', allError);
       
       // Debug: Check pending status filter
       const { data: pendingOnly, error: pendingError } = await supabase
@@ -62,8 +58,6 @@ const InvitationNotifications = () => {
         .select('*')
         .or(`invited_email.eq.${user?.email},invited_user_id.eq.${user?.id}`)
         .eq('status', 'pending');
-      
-      console.log('Step 1 - Pending invitations only:', pendingOnly, 'Error:', pendingError);
       
       // Debug: Check expiry filter
       const currentTime = new Date().toISOString();
@@ -73,7 +67,6 @@ const InvitationNotifications = () => {
         .or(`invited_email.eq.${user?.email},invited_user_id.eq.${user?.id}`)
         .eq('status', 'pending')
         .or(`expires_at.gt.${currentTime},expires_at.is.null`);
-        console.log('Step 2 - After expiry filter:', unexpired, 'Current time:', currentTime, 'Error:', unexpiredError);
       
       // Load invitations with related data
       const { data: rawInvitations, error } = await supabase
@@ -89,18 +82,8 @@ const InvitationNotifications = () => {
         .or(`invited_email.eq.${user?.email},invited_user_id.eq.${user?.id}`)
         .eq('status', 'pending')
         .or(`expires_at.gt.${currentTime},expires_at.is.null`)
-        .order('created_at', { ascending: false });
-
-      console.log('Step 3 - Final query with trips join:', rawInvitations, 'Error:', error);
-      
-      // Debug: Check what trip data looks like
-      if (rawInvitations && rawInvitations.length > 0) {
-        console.log('Sample invitation with trip data:', rawInvitations[0]);
-        console.log('Trip object structure:', rawInvitations[0].trips || rawInvitations[0].trips);
-      }
-
-      if (error) {
-        console.error('Error loading invitations:', error);
+        .order('created_at', { ascending: false });      if (error) {
+        // Error loading invitations
         toast.error(`Error loading invitations: ${error.message}`);
         return;
       }
@@ -123,34 +106,27 @@ const InvitationNotifications = () => {
                 email: inviterProfile.email || '',
                 avatar_url: inviterProfile.avatar_url
               } : null
-            };
-          } catch (error) {
-            console.warn('Error loading inviter details for invitation:', invitation.id, error);
+            };          } catch (error) {
+            // Error loading inviter details for invitation
             return invitation;
           }
         })
       );
 
-      setInvitations(enrichedInvitations as TripInvitation[]);
-    } catch (error) {
-      console.error('Error loading invitations:', error);
+      setInvitations(enrichedInvitations as TripInvitation[]);    } catch (error) {
+      // Error loading invitations
       toast.error('Failed to load invitations');
     } finally {
       setLoading(false);
     }
-  };
-  const handleAcceptInvitation = async (invitationId: string) => {
+  };  const handleAcceptInvitation = async (invitationId: string) => {
     try {
-      console.log('Accepting invitation:', invitationId);
-      
       const { data, error } = await supabase.rpc('accept_trip_invitation', {
         invitation_id: invitationId
       });
 
-      console.log('Accept invitation result:', { data, error });
-
       if (error) {
-        console.error('Error accepting invitation:', error);
+        // Error accepting invitation
         toast.error(`Failed to accept invitation: ${error.message}`);
         return;
       }
@@ -164,12 +140,12 @@ const InvitationNotifications = () => {
           window.location.reload();
         }, 1000);
       } else {
-        console.log('Invitation acceptance returned false, likely expired or invalid');
+        // Invitation acceptance returned false, likely expired or invalid
         toast.error('Invitation expired or invalid');
         loadInvitations(); // Refresh to remove invalid invitations
       }
     } catch (error) {
-      console.error('Error accepting invitation:', error);
+      // Error accepting invitation
       toast.error('Failed to accept invitation');
     }
   };
@@ -180,12 +156,11 @@ const InvitationNotifications = () => {
         .from('trip_invitations')
         .update({ 
           status: 'declined',
-          updated_at: new Date().toISOString()
-        })
+          updated_at: new Date().toISOString()        })
         .eq('id', invitationId);
 
       if (error) {
-        console.error('Error declining invitation:', error);
+        // Error declining invitation
         toast.error('Failed to decline invitation');
         return;
       }
@@ -193,7 +168,7 @@ const InvitationNotifications = () => {
       toast.success('Trip invitation declined');
       loadInvitations(); // Refresh invitations
     } catch (error) {
-      console.error('Error declining invitation:', error);
+      // Error declining invitation
       toast.error('Failed to decline invitation');
     }
   };
@@ -213,44 +188,7 @@ const InvitationNotifications = () => {
       minute: '2-digit'
     });
   };
-
   const pendingCount = invitations.length;
-
-  // Debug function to test invitation loading
-  const debugInvitations = async () => {
-    console.log('=== INVITATION DEBUG ===');
-    console.log('Current user:', user);
-    
-    // Test direct access to trip_invitations table
-    const { data: allInvites, error: allError } = await supabase
-      .from('trip_invitations')
-      .select('*');
-    
-    console.log('All invitations in database:', allInvites?.length, allInvites);
-    console.log('Error loading all invitations:', allError);
-    
-    // Test user-specific invitations by email
-    if (user?.email) {
-      const { data: emailInvites, error: emailError } = await supabase
-        .from('trip_invitations')
-        .select('*')
-        .eq('invited_email', user.email);
-      
-      console.log('Invitations by email:', emailInvites?.length, emailInvites);
-      console.log('Error loading email invitations:', emailError);
-    }
-    
-    // Test user-specific invitations by ID
-    if (user?.id) {
-      const { data: idInvites, error: idError } = await supabase
-        .from('trip_invitations')
-        .select('*')
-        .eq('invited_user_id', user.id);
-      
-      console.log('Invitations by user ID:', idInvites?.length, idInvites);
-      console.log('Error loading ID invitations:', idError);
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -268,21 +206,12 @@ const InvitationNotifications = () => {
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">        <DialogHeader>          <DialogTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
             Trip Invitations
             {pendingCount > 0 && (
               <Badge variant="secondary">{pendingCount}</Badge>
             )}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={debugInvitations}
-              className="ml-auto text-xs"
-            >
-              Debug
-            </Button>
           </DialogTitle>
         </DialogHeader>
 

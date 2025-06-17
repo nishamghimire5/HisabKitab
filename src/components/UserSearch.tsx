@@ -39,11 +39,7 @@ const UserSearch = ({ onUserSelect, excludeUserIds = [], placeholder = "Enter co
       if (!searchQuery.trim() || (!isCompleteEmail && !isSubstantialUsername)) {
         setSearchResults([]);
         return;
-      }
-
-      setLoading(true);      try {        // Try searching with username support first - use exact match for privacy
-        console.log('Searching for:', searchQuery);
-        
+      }      setLoading(true);      try {        // Try searching with username support first - use exact match for privacy
         let searchCondition;
         if (isEmail) {
           // For email, use exact match
@@ -55,13 +51,11 @@ const UserSearch = ({ onUserSelect, excludeUserIds = [], placeholder = "Enter co
         
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
-          .or(searchCondition)
+          .select('*')          .or(searchCondition)
           .neq('id', user?.id) // Exclude current user
           .limit(5);
 
-        console.log('Search results:', data, 'Error:', error);        if (error && error.message.includes('column "username" does not exist')) {
-          console.log('Username column not found, falling back to email search');
+        if (error && error.message.includes('column "username" does not exist')) {
           // Fallback to exact email match only for privacy
           if (isEmail) {
             const { data: fallbackData, error: fallbackError } = await supabase
@@ -72,7 +66,6 @@ const UserSearch = ({ onUserSelect, excludeUserIds = [], placeholder = "Enter co
               .limit(5);
             
             if (fallbackError) {
-              console.error('Fallback search error:', fallbackError);
               setSearchResults([]);
               toast.error('Search failed. Please try again.');
             } else {
@@ -90,9 +83,7 @@ const UserSearch = ({ onUserSelect, excludeUserIds = [], placeholder = "Enter co
             setSearchResults([]);
             toast.info('Username search not available. Apply database migration to enable username search.');
           }
-          return;
-        } else if (error) {
-          console.error('Error searching users:', error);
+          return;        } else if (error) {
           toast.error('Search failed. Please try again.');
           return;
         }
@@ -104,7 +95,6 @@ const UserSearch = ({ onUserSelect, excludeUserIds = [], placeholder = "Enter co
 
         setSearchResults(filteredResults);
       } catch (error) {
-        console.error('Error searching users:', error);
         toast.error('Failed to search users');
       } finally {
         setLoading(false);

@@ -101,31 +101,22 @@ const TripInvitationModal = ({ open, onOpenChange, trip, onInvitationSent }: Tri
     }    setLoading(true);
     try {
       const invitations = selectedUsers.map(selectedUser => ({
-        trip_id: trip.id,
-        invited_user_id: selectedUser.id.startsWith('email-') ? null : selectedUser.id,
+        trip_id: trip.id,        invited_user_id: selectedUser.id.startsWith('email-') ? null : selectedUser.id,
         invited_email: selectedUser.email,
         invited_by: user?.id,
         message: invitationMessage.trim() || null,
         status: 'pending'
-      }));      console.log('Sending invitations:', invitations);
+      }));
 
       const { data, error } = await supabase
         .from('trip_invitations')
         .insert(invitations)
         .select();
 
-      console.log('Insert result - Data:', data);
-      console.log('Insert result - Error:', error);
-      console.log('Insert success:', !error && data && data.length > 0);
-
       if (error) {
-        console.error('Error sending invitations:', error);
         toast.error(`Failed to send invitations: ${error.message}`);
         return;
-      }
-
-      if (!data || data.length === 0) {
-        console.error('No data returned from insert - possible RLS policy issue');
+      }      if (!data || data.length === 0) {
         toast.error('Invitations may not have been sent due to permissions. Check with admin.');
         return;
       }
@@ -136,7 +127,6 @@ const TripInvitationModal = ({ open, onOpenChange, trip, onInvitationSent }: Tri
       onInvitationSent();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error sending invitations:', error);
       toast.error('Failed to send invitations');
     } finally {
       setLoading(false);

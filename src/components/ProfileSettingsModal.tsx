@@ -38,19 +38,16 @@ const ProfileSettingsModal = ({ open, onOpenChange }: ProfileSettingsModalProps)
         .from('profiles')
         .select('full_name, username, bio')
         .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error loading profile:', error);
+        .single();      if (error) {
+        // Error loading profile
       } else {
         setFormData({
           full_name: data.full_name || '',
           username: data.username || '',
           bio: data.bio || ''
         });
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
+      }    } catch (error) {
+      // Error loading profile
     }
   };
 
@@ -66,16 +63,13 @@ const ProfileSettingsModal = ({ open, onOpenChange }: ProfileSettingsModalProps)
         .from('profiles')
         .select('id')
         .eq('username', username)
-        .neq('id', user?.id || '');
-
-      if (error) {
-        console.error('Error checking username:', error);
+        .neq('id', user?.id || '');      if (error) {
+        // Error checking username
         setUsernameAvailable(null);
       } else {
         setUsernameAvailable(data.length === 0);
-      }
-    } catch (error) {
-      console.error('Error checking username:', error);
+      }    } catch (error) {
+      // Error checking username
       setUsernameAvailable(null);
     } finally {
       setCheckingUsername(false);
@@ -114,17 +108,14 @@ const ProfileSettingsModal = ({ open, onOpenChange }: ProfileSettingsModalProps)
           username: formData.username || null,
           bio: formData.bio || null
         })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error updating profile:', error);
+        .eq('id', user.id);      if (error) {
+        // Error updating profile
         toast.error('Failed to update profile');
       } else {
         toast.success('Profile updated successfully!');
         onOpenChange(false);
-      }
-    } catch (error) {
-      console.error('Error updating profile:', error);
+      }    } catch (error) {
+      // Error updating profile
       toast.error('Failed to update profile');
     } finally {
       setLoading(false);

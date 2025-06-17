@@ -40,9 +40,8 @@ const CreateTripModal = ({ open, onOpenChange, onCreateTrip }: CreateTripModalPr
           .select('id, email, full_name, username')
           .in('id', selectedFriends);
 
-        setSelectedFriendProfiles(profiles || []);
-      } catch (error) {
-        console.error('Error fetching friend profiles:', error);
+        setSelectedFriendProfiles(profiles || []);      } catch (error) {
+        // Error fetching friend profiles
       }
     };
 
@@ -83,9 +82,8 @@ const CreateTripModal = ({ open, onOpenChange, onCreateTrip }: CreateTripModalPr
         toast.success(`Trip created! Invitations will be sent to ${selectedFriends.length} friend(s).`);
       } else {
         toast.success("Trip created! Use 'Manage Members' to invite others securely.");
-      }
-    } catch (error) {
-      console.error('Error creating trip:', error);
+      }    } catch (error) {
+      // Error creating trip
       toast.error('Failed to create trip');
     } finally {
       setIsLoading(false);

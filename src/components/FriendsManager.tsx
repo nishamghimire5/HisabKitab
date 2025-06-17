@@ -66,15 +66,13 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
           .select('*')
           .eq('friend_user_id', user?.id)
           .eq('status', 'accepted')
-      ]);
-
-      // Check for errors
+      ]);      // Check for errors
       if (friendships1.error || friendships2.error) {
         const error = friendships1.error || friendships2.error;
-        console.error('Error loading friends:', error);
+        // Error loading friends
         // If table doesn't exist, just set empty friends list
         if (error?.message.includes('relation "user_friends" does not exist')) {
-          console.info('Friends table not created yet. Run create-friends-system.sql to enable friends feature.');
+          // Friends table not created yet. Run create-friends-system.sql to enable friends feature.
           setFriends([]);
         }
         return;
@@ -101,20 +99,16 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
             return {
               ...friendship,
               friend_profile: profile
-            };
-          } catch (error) {
-            console.warn('Error loading friend profile:', friendship.id, error);
+            };          } catch (error) {
+            // Error loading friend profile
             return friendship;
           }
         })
-      );
-
-      console.log('Loaded friends:', friendshipsWithProfiles);
-      setFriends(friendshipsWithProfiles);
+      );      setFriends(friendshipsWithProfiles);
     } catch (error) {
-      console.error('Error loading friends:', error);
+      // Error loading friends
       setFriends([]);
-    } finally {
+    }finally {
       setLoading(false);
     }
   };const loadPendingRequests = async () => {
@@ -125,10 +119,8 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
         .select('*')
         .eq('friend_user_id', user?.id)
         .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error loading pending requests:', error);
+        .order('created_at', { ascending: false });      if (error) {
+        // Error loading pending requests
         // If table doesn't exist, just set empty pending requests
         if (error.message.includes('relation "user_friends" does not exist')) {
           setPendingRequests([]);
@@ -147,24 +139,20 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
               .single();            return {
               ...request,
               friend_profile: profile
-            };
-          } catch (error) {
-            console.warn('Error loading profile for request:', request.id, error);
+            };          } catch (error) {
+            // Error loading profile for request
             return request;
           }
         })
-      );      console.log('Loaded pending requests:', requestsWithProfiles);
-      console.log('Current user ID:', user?.id);
-      console.log('Requests for current user:', requestsWithProfiles.filter(r => r.friend_user_id === user?.id));
+      );
+      
       setPendingRequests(requestsWithProfiles);
     } catch (error) {
-      console.error('Error loading pending requests:', error);
+      // Error loading pending requests
       setPendingRequests([]);
     }
   };  const sendFriendRequest = async (friendProfile: any) => {
     try {
-      console.log('Sending friend request from', user?.id, 'to', friendProfile.id);
-      
       // Check if friendship already exists in either direction
       const [check1, check2] = await Promise.all([
         supabase
@@ -181,8 +169,6 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
           .eq('friend_user_id', user?.id)
           .maybeSingle()      ]);
 
-      console.log('Existing friendship check:', { check1: check1.data, check2: check2.data });
-
       const existing = check1.data || check2.data;
       
       if (existing) {
@@ -194,7 +180,9 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
           toast.error('Friend request already exists');
         }
         return;
-      }      const { data: insertData, error } = await supabase
+      }
+
+      const { data: insertData, error } = await supabase
         .from('user_friends')
         .insert({
           user_id: user?.id,
@@ -204,10 +192,8 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
         .select()
         .single();
 
-      console.log('Friend request insert result:', { data: insertData, error });
-
       if (error) {
-        console.error('Error sending friend request:', error);
+        // Error sending friend request
         if (error.message.includes('relation "user_friends" does not exist')) {
           toast.error('Friends feature not available yet. Please contact admin to set up the friends system.');
         } else if (error.code === '23505') {
@@ -217,12 +203,11 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
           toast.error('Failed to send friend request');
         }
         return;
-      }      toast.success(`Friend request sent to ${getUserDisplayName(friendProfile.email, friendProfile.full_name, friendProfile.username)}!`);
+      }toast.success(`Friend request sent to ${getUserDisplayName(friendProfile.email, friendProfile.full_name, friendProfile.username)}!`);
       
       // Refresh pending requests in case there are any changes
-      loadPendingRequests();
-    } catch (error) {
-      console.error('Error sending friend request:', error);
+      loadPendingRequests();    } catch (error) {
+      // Error sending friend request
       toast.error('Failed to send friend request');
     }
   };
@@ -232,19 +217,16 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
       const { error } = await supabase
         .from('user_friends')
         .update({ status: response })
-        .eq('id', requestId);
-
-      if (error) {
-        console.error('Error responding to friend request:', error);
+        .eq('id', requestId);      if (error) {
+        // Error responding to friend request
         toast.error('Failed to respond to friend request');
         return;
       }
 
       toast.success(`Friend request ${response}!`);
       loadFriends();
-      loadPendingRequests();
-    } catch (error) {
-      console.error('Error responding to friend request:', error);
+      loadPendingRequests();    } catch (error) {
+      // Error responding to friend request
       toast.error('Failed to respond to friend request');
     }
   };
@@ -254,18 +236,15 @@ const FriendsManager = ({ onFriendSelect, selectedFriends = [], selectionMode = 
       const { error } = await supabase
         .from('user_friends')
         .delete()
-        .eq('id', friendshipId);
-
-      if (error) {
-        console.error('Error removing friend:', error);
+        .eq('id', friendshipId);      if (error) {
+        // Error removing friend
         toast.error('Failed to remove friend');
         return;
       }
 
       toast.success('Friend removed');
-      loadFriends();
-    } catch (error) {
-      console.error('Error removing friend:', error);
+      loadFriends();    } catch (error) {
+      // Error removing friend
       toast.error('Failed to remove friend');
     }
   };

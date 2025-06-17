@@ -16,8 +16,28 @@ export default {
 			screens: {
 				'2xl': '1400px'
 			}
-		},
-		extend: {
+		},		extend: {
+			fontFamily: {
+				sans: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
+				display: ['Poppins', 'Space Grotesk', 'system-ui', 'sans-serif'],
+				mono: ['JetBrains Mono', 'Monaco', 'Cascadia Code', 'Segoe UI Mono', 'monospace'],
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-secondary': 'var(--gradient-secondary)',
+				'gradient-success': 'var(--gradient-success)',
+				'gradient-warning': 'var(--gradient-warning)',
+				'gradient-danger': 'var(--gradient-danger)',
+				'gradient-surface': 'var(--gradient-surface)',
+				'gradient-card': 'var(--gradient-card)',
+				'gradient-bg': 'var(--gradient-bg)',
+			},
+			boxShadow: {
+				'glow': 'var(--shadow-glow)',
+				'soft': 'var(--shadow-soft)',
+				'medium': 'var(--shadow-medium)',
+				'strong': 'var(--shadow-strong)',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

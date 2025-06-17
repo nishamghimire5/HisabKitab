@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import TripDetails from "./pages/TripDetails";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Documentation from "./pages/Documentation";
+import About from "./pages/About";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EmailConfirmation from "./components/EmailConfirmation";
 
@@ -20,10 +22,11 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>            <Route path="/auth" element={<Auth />} />
+        <BrowserRouter>          <Routes>
+            <Route path="/auth" element={<Auth />} />
             <Route path="/confirm" element={<EmailConfirmation />} />
-            <Route path="/email-verification" element={<EmailConfirmation />} />
+            <Route path="/docs" element={<Documentation />} />
+            <Route path="/about" element={<About />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <Index />

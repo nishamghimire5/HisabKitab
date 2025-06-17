@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
-import { Plus, Users, Calculator, TrendingUp } from "lucide-react";
+import { Plus, Users, Calculator, TrendingUp, BookOpen, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import CreateTripModal from "@/components/CreateTripModal";
 import TripCard from "@/components/TripCard";
 import UserMenu from "@/components/UserMenu";
@@ -18,13 +18,14 @@ const Index = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();  // Load trips from Supabase
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Load trips from Supabase
   useEffect(() => {
     const loadTrips = async () => {
       if (!user) return;
       try {
-        console.log('Loading trips for user:', user.email, 'user.id:', user.id);
-        
         // Use simple trips table query for now to avoid schema issues
         const { data: allTrips, error: tripsError } = await supabase
           .from('trips')
@@ -32,11 +33,7 @@ const Index = () => {
           .contains('members', [user.email])
           .order('created_at', { ascending: false });
 
-        console.log('Direct trips query result:', allTrips, 'Error:', tripsError);
-
         if (tripsError) {
-          console.error('Error loading trips:', tripsError);
-          console.error('Full trips error object:', JSON.stringify(tripsError, null, 2));
           toast.error(`Failed to load trips: ${tripsError.message}`);
           return;
         }
@@ -52,11 +49,8 @@ const Index = () => {
           created_by: trip.created_by
         }));
 
-        console.log('Formatted trips:', formattedTrips);
         setTrips(formattedTrips);
       } catch (error) {
-        console.error('Error loading trips:', error);
-        console.error('Full catch error object:', JSON.stringify(error, null, 2));
         toast.error('Failed to load trips');
       } finally {
         setLoading(false);
@@ -64,13 +58,17 @@ const Index = () => {
     };
 
     loadTrips();
-  }, [user]);  const handleCreateTrip = async (newTrip: Omit<Trip, 'id' | 'createdAt'>) => {
+  }, [user]);
+
+  const handleCreateTrip = async (newTrip: Omit<Trip, 'id' | 'createdAt'>) => {
     if (!user) return;
 
     try {
-      // Ensure the creator's email is included in the members array
-      const membersWithCreator = [...new Set([user.email, ...newTrip.members])];
-      
+      // Ensure the creator is always in the members list
+      const membersWithCreator = newTrip.members.includes(user.email) 
+        ? newTrip.members 
+        : [user.email, ...newTrip.members];
+
       const { data, error } = await supabase
         .from('trips')
         .insert({
@@ -83,7 +81,6 @@ const Index = () => {
         .single();
 
       if (error) {
-        console.error('Error creating trip:', error);
         toast.error('Failed to create trip');
         return;
       }
@@ -106,7 +103,6 @@ const Index = () => {
           await sendFriendInvitations(data.id, newTrip.initialFriends);
           toast.success(`Trip created! Invitations sent to ${newTrip.initialFriends.length} friend(s).`);
         } catch (inviteError) {
-          console.error('Error sending friend invitations:', inviteError);
           toast.success('Trip created successfully!');
           toast.error('Some invitations failed to send. You can invite them manually.');
         }
@@ -114,44 +110,36 @@ const Index = () => {
         toast.success('Trip created successfully!');
       }
     } catch (error) {
-      console.error('Error creating trip:', error);
       toast.error('Failed to create trip');
     }
   };
+
   const sendFriendInvitations = async (tripId: string, friendIds: string[]) => {
-    console.log('Sending invitations to friends:', friendIds, 'for trip:', tripId);
-    
     // Get friend profiles to get their emails
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, email')
       .in('id', friendIds);
 
-    console.log('Friend profiles retrieved:', profiles, 'Error:', profilesError);
-
     if (profilesError) {
       throw new Error('Failed to get friend profiles');
-    }    // Send invitations to each friend
+    }
+
+    // Send invitations to each friend
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + 7); // 7 days from now
     
     const invitations = profiles.map(profile => ({
       trip_id: tripId,
-      invited_user_id: profile.id,
       invited_email: profile.email,
-      invited_by: user.id,
-      status: 'pending',
-      expires_at: expirationDate.toISOString()
+      invited_by: user!.id,
+      expires_at: expirationDate.toISOString(),
+      status: 'pending'
     }));
 
-    console.log('Invitations to insert:', invitations);
-
-    const { data: insertedData, error: inviteError } = await supabase
+    const { error: inviteError } = await supabase
       .from('trip_invitations')
-      .insert(invitations)
-      .select();
-
-    console.log('Invitation insert result:', insertedData, 'Error:', inviteError);
+      .insert(invitations);
 
     if (inviteError) {
       throw new Error('Failed to send invitations');
@@ -166,7 +154,6 @@ const Index = () => {
         .eq('id', tripId);
 
       if (error) {
-        console.error('Error deleting trip:', error);
         toast.error('Failed to delete trip');
         return;
       }
@@ -174,97 +161,148 @@ const Index = () => {
       setTrips(trips.filter(trip => trip.id !== tripId));
       toast.success('Trip deleted successfully!');
     } catch (error) {
-      console.error('Error deleting trip:', error);
       toast.error('Failed to delete trip');
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your trips...</p>
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading your trips...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                SettleUp Smart
-              </h1>
-              <p className="text-gray-600 text-sm">Smart expense splitting made simple</p>
-            </div>            <div className="flex items-center gap-4">
-              <FriendsManager />
-              <Button 
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+    <div className="min-h-screen bg-gradient-bg">
+      {/* Beautiful Modern Header */}
+      <div className="relative bg-gradient-to-br from-slate-50 via-blue-50/70 to-indigo-100/80 border-b border-white/20">
+        <div className="absolute inset-0 opacity-40">
+          <div className="w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+        </div>
+        <div className="relative">
+          <div className="container mx-auto px-4 py-3 md:py-4">
+            <div className="flex items-center justify-between">
+              <div 
+                className="cursor-pointer flex-shrink-0 group transition-all duration-200 hover:scale-105"
+                onClick={() => navigate('/')}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                New Trip
-              </Button>
-              <UserMenu />
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-primary rounded-xl shadow-soft group-hover:shadow-glow transition-all duration-300 flex items-center justify-center">
+                    <Calculator className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl md:text-2xl font-display font-bold gradient-text-primary">
+                      SettleUp Smart
+                    </h1>
+                    <p className="text-gray-600 text-xs md:text-sm font-medium">Smart expense splitting made simple</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="hidden lg:flex items-center gap-2">                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/docs')}
+                  className="flex items-center gap-2 hover:bg-white/60 hover:text-primary transition-all duration-200 backdrop-blur-sm rounded-lg"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Guide
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/about')}
+                  className="flex items-center gap-2 hover:bg-white/60 hover:text-primary transition-all duration-200 backdrop-blur-sm rounded-lg"
+                >
+                  <Info className="w-4 h-4" />
+                  About
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-2 md:gap-4">
+                <InvitationNotifications />
+                <FriendsManager />
+                <Button 
+                  onClick={() => setIsCreateModalOpen(true)}
+                  size="sm"
+                  className="bg-gradient-primary hover:shadow-glow text-white shadow-soft transition-all duration-300 transform hover:scale-105 rounded-xl font-semibold"
+                >
+                  <Plus className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">New Trip</span>
+                </Button>
+                <UserMenu />
+              </div>
             </div>
           </div>
         </div>
-      </div>      <div className="container mx-auto px-4 py-8">
-        {/* Invitation Notifications */}
-        <InvitationNotifications />
-          {/* Shared Trips Section */}
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Shared Trips Section */}
         <div className="mb-8">
           <SharedTrips myTrips={trips} onDeleteTrip={handleDeleteTrip} />
         </div>
         
         {trips.length === 0 ? (
-          // Empty State
+          // Modern Empty State
           <div className="text-center py-16">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-              <Calculator className="w-12 h-12 text-blue-500" />
+            <div className="w-28 h-28 mx-auto mb-8 bg-gradient-primary rounded-3xl flex items-center justify-center shadow-strong animate-float">
+              <Calculator className="w-14 h-14 text-white" />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Welcome to SettleUp Smart!</h2>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            <h2 className="text-4xl font-display font-bold text-gray-800 mb-4 gradient-text-primary">Welcome to SettleUp Smart!</h2>
+            <p className="text-lg text-gray-600 mb-12 max-w-lg mx-auto font-medium leading-relaxed">
               Create your first trip to start splitting expenses with friends. Perfect for vacations, group dinners, and shared activities.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-8">
-              <div className="text-center p-6 bg-white/60 rounded-lg">
-                <Users className="w-8 h-8 mx-auto mb-3 text-blue-500" />
-                <h3 className="font-semibold mb-2">Create Groups</h3>
-                <p className="text-sm text-gray-600">Add friends and manage group trips effortlessly</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-12">
+              <div className="glass-card p-8 rounded-2xl hover:shadow-medium transition-all duration-300 group hover:scale-105">
+                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-success rounded-2xl flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-display font-bold text-xl mb-3 text-gray-800">Create Groups</h3>
+                <p className="text-gray-600 leading-relaxed">Add friends and manage group trips effortlessly with smart invitations</p>
               </div>
-              <div className="text-center p-6 bg-white/60 rounded-lg">
-                <Plus className="w-8 h-8 mx-auto mb-3 text-purple-500" />
-                <h3 className="font-semibold mb-2">Track Expenses</h3>
-                <p className="text-sm text-gray-600">Log expenses with partial participation support</p>
+              
+              <div className="glass-card p-8 rounded-2xl hover:shadow-medium transition-all duration-300 group hover:scale-105">
+                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-warning rounded-2xl flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300">
+                  <Plus className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-display font-bold text-xl mb-3 text-gray-800">Track Expenses</h3>
+                <p className="text-gray-600 leading-relaxed">Log expenses with partial participation and smart categorization</p>
               </div>
-              <div className="text-center p-6 bg-white/60 rounded-lg">
-                <TrendingUp className="w-8 h-8 mx-auto mb-3 text-green-500" />
-                <h3 className="font-semibold mb-2">Smart Settlements</h3>
-                <p className="text-sm text-gray-600">Get optimized payment recommendations</p>
+              
+              <div className="glass-card p-8 rounded-2xl hover:shadow-medium transition-all duration-300 group hover:scale-105">
+                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-secondary rounded-2xl flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300">
+                  <TrendingUp className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-display font-bold text-xl mb-3 text-gray-800">Smart Settlements</h3>
+                <p className="text-gray-600 leading-relaxed">Get optimized payment recommendations to minimize transactions</p>
               </div>
             </div>
+            
             <Button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-8 py-3"
+              size="lg"
+              className="bg-gradient-primary hover:shadow-glow text-white px-8 py-4 text-lg font-display font-semibold shadow-strong transition-all duration-300 transform hover:scale-105 rounded-xl"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-5 h-5 mr-3" />
               Create Your First Trip
             </Button>
           </div>
         ) : (
-          // Trips Grid
+          // Modern Trips Grid
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-800">Your Trips</h2>
-              <p className="text-gray-600">{trips.length} trip{trips.length !== 1 ? 's' : ''}</p>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-display font-bold gradient-text-primary">Your Trips</h2>
+              <div className="bg-gradient-secondary text-white px-4 py-2 rounded-full text-sm font-semibold shadow-soft">
+                {trips.length} trip{trips.length !== 1 ? 's' : ''}
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {trips.map((trip) => (
                 <TripCard 
                   key={trip.id} 
@@ -272,7 +310,8 @@ const Index = () => {
                   onDelete={handleDeleteTrip}
                 />
               ))}
-            </div>          </div>
+            </div>
+          </div>
         )}
       </div>
 

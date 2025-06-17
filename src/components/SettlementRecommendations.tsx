@@ -2,6 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, ArrowRight } from "lucide-react";
 import { Settlement } from "@/types/Trip";
+import { formatCurrency } from "@/utils/currency";
 
 interface SettlementRecommendationsProps {
   settlements: Settlement[];
@@ -25,9 +26,8 @@ const SettlementRecommendations = ({ settlements }: SettlementRecommendationsPro
                 <span className="font-medium">{settlement.from}</span>
                 <ArrowRight className="w-4 h-4 text-gray-400" />
                 <span className="font-medium">{settlement.to}</span>
-              </div>
-              <Badge className="bg-blue-600 text-white">
-                ${settlement.amount.toFixed(2)}
+              </div>              <Badge className="bg-blue-600 text-white">
+                {formatCurrency(settlement.amount)}
               </Badge>
             </div>
           ))}

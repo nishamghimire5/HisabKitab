@@ -7,6 +7,7 @@ import { calculateSettlements } from "@/utils/settlementCalculations";
 import MemberBalances from "./MemberBalances";
 import SettlementRecommendations from "./SettlementRecommendations";
 import { useUserProfiles } from "@/hooks/useUserProfiles";
+import { formatCurrency } from "@/utils/currency";
 
 interface SettlementSummaryProps {
   trip: Trip;
@@ -47,7 +48,7 @@ const SettlementSummary = ({ trip }: SettlementSummaryProps) => {
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <p className="text-sm text-gray-600">Total Spent</p>
-              <p className="text-lg font-bold">${totalExpenses.toFixed(2)}</p>
+              <p className="text-lg font-bold">{formatCurrency(totalExpenses)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Settlements</p>

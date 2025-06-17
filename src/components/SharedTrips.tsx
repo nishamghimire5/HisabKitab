@@ -28,9 +28,8 @@ const SharedTrips = ({ myTrips, onDeleteTrip }: SharedTripsProps) => {
     try {
       // For now, we'll show shared trips as empty since we need the database migration first
       // This will be populated after applying the migration in Supabase
-      setSharedTrips([]);
-    } catch (error) {
-      console.error('Error loading shared trips:', error);
+      setSharedTrips([]);    } catch (error) {
+      // Silent failure - just show empty shared trips
     } finally {
       setLoading(false);
     }

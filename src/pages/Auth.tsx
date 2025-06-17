@@ -30,10 +30,11 @@ const Auth = () => {
     try {
       if (isLogin) {
         const { error } = await signIn(email, password);
-        if (error) {          if (error.message.includes('Email not confirmed')) {
+        if (error) {
+          if (error.message.includes('Email not confirmed')) {
             setNeedsConfirmation(true);
             setConfirmationEmail(email);
-            toast.warning('Please verify your email to continue. Check your inbox for the verification link.');
+            toast.error('Please check your email and click the confirmation link to verify your account.');
           } else if (error.message.includes('Invalid login credentials')) {
             toast.error('Invalid email or password. Please check your credentials and try again.');
           } else {
@@ -51,13 +52,11 @@ const Auth = () => {
             setIsLogin(true);
           } else {
             toast.error(error.message);
-          }        } else {
+          }
+        } else {
           setNeedsConfirmation(true);
           setConfirmationEmail(email);
-          toast.success('Account created! Please check your email to verify your account.', {
-            description: 'We\'ve sent a verification link to your email address. Please click it to activate your account.',
-            duration: 6000
-          });
+          toast.success('Account created! Please check your email to verify your account.');
         }
       }
     } catch (error) {
@@ -72,11 +71,9 @@ const Auth = () => {
     try {
       const { error } = await resendConfirmation(confirmationEmail);
       if (error) {
-        toast.error(error.message);      } else {
-        toast.success('Confirmation email sent!', {
-          description: 'Please check your inbox and spam folder for the verification link.',
-          duration: 4000
-        });
+        toast.error(error.message);
+      } else {
+        toast.success('Confirmation email sent! Please check your inbox.');
       }
     } catch (error) {
       toast.error('Failed to resend confirmation email');
@@ -100,19 +97,19 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {needsConfirmation && (            <Alert className="mb-6 border-blue-200 bg-blue-50">
+          {needsConfirmation && (
+            <Alert className="mb-6 border-blue-200 bg-blue-50">
               <Mail className="h-4 w-4" />
-              <AlertDescription className="text-sm text-blue-800">
-                <p className="font-medium mb-1">Verification email sent</p>
-                <p>We've sent a confirmation email to <strong>{confirmationEmail}</strong>.</p>
-                <p className="mb-2">Please check your inbox (and spam folder) and click the verification link to activate your account.</p>
+              <AlertDescription>
+                We've sent a confirmation email to <strong>{confirmationEmail}</strong>. 
+                Please check your inbox and click the link to verify your account.
                 <Button 
                   variant="link" 
-                  className="p-0 h-auto font-normal text-blue-600"
+                  className="p-0 h-auto font-normal text-blue-600 ml-1"
                   onClick={handleResendConfirmation}
                   disabled={loading}
                 >
-                  {loading ? "Sending..." : "Didn't receive the email? Resend verification"}
+                  Resend email
                 </Button>
               </AlertDescription>
             </Alert>

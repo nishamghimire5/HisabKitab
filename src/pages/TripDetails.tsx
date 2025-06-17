@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Plus, Users, Calculator, DollarSign } from "lucide-react";
+import { ArrowLeft, Plus, Users, Calculator, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Trip } from "@/types/Trip";
 import AddExpenseModal from "@/components/AddExpenseModal";
 import ExpenseList from "@/components/ExpenseList";
 import SettlementSummary from "@/components/SettlementSummary";
+import { formatCurrency } from "@/utils/currency";
 import UserMenu from "@/components/UserMenu";
 import TripMemberManagement from "@/components/TripMemberManagement";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,10 +36,7 @@ const TripDetails = () => {
           .from('trips')
           .select('*')
           .eq('id', id)
-          .single();
-
-        if (tripError) {
-          console.error('Error loading trip:', tripError);
+          .single();        if (tripError) {
           toast.error('Failed to load trip details');
           setTrip(null);
           setLoading(false);
@@ -50,12 +48,9 @@ const TripDetails = () => {
           .from('expenses')
           .select('*')
           .eq('trip_id', id)
-          .order('created_at', { ascending: false });
-
-        if (expensesError) {
-          console.error('Error loading expenses:', expensesError);
+          .order('created_at', { ascending: false });        if (expensesError) {
           // Continue without expenses if there's an error loading them
-        }        // Convert Supabase data to Trip format
+        }// Convert Supabase data to Trip format
         const tripWithExpenses: Trip = {
           id: tripData.id,
           name: tripData.name,
@@ -75,9 +70,7 @@ const TripDetails = () => {
           createdAt: tripData.created_at
         };
         
-        setTrip(tripWithExpenses);
-      } catch (error) {
-        console.error('Error loading trip:', error);
+        setTrip(tripWithExpenses);      } catch (error) {
         toast.error('Failed to load trip details');
         setTrip(null);
       } finally {
@@ -96,17 +89,13 @@ const TripDetails = () => {
           members: updatedTrip.members,
           created_by: updatedTrip.created_by
         })
-        .eq('id', updatedTrip.id);
-
-      if (error) {
-        console.error('Error updating trip:', error);
+        .eq('id', updatedTrip.id);      if (error) {
         toast.error('Failed to update trip');
       } else {
         setTrip(updatedTrip);
         toast.success('Trip updated successfully');
       }
     } catch (error) {
-      console.error('Error updating trip:', error);
       toast.error('Failed to update trip');
     }
   };
@@ -126,10 +115,7 @@ const TripDetails = () => {
           date: newExpense.date,
           category: newExpense.category || '',
           split_type: newExpense.splitType
-        });
-
-      if (error) {
-        console.error('Error saving expense:', error);
+        });      if (error) {
         toast.error('Failed to save expense');
         return;
       }
@@ -138,7 +124,6 @@ const TripDetails = () => {
       setTrip(updatedTrip);
       toast.success('Expense added successfully');
     } catch (error) {
-      console.error('Error saving expense:', error);
       toast.error('Failed to save expense');
     }
   };
@@ -169,11 +154,10 @@ const TripDetails = () => {
   }
 
   const totalExpenses = trip.expenses.reduce((sum, expense) => sum + expense.amount, 0);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-10">
+      <div className="bg-white/90 backdrop-blur-md border-b border-white/20 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -188,21 +172,35 @@ const TripDetails = () => {
                   <p className="text-sm text-gray-600">{trip.description}</p>
                 )}
               </div>
-            </div>            <div className="flex items-center gap-4">
+            </div>            <div className="flex items-center gap-2">
               <Button 
                 onClick={() => setIsMemberManagementOpen(true)}
                 variant="outline"
-                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                size="sm"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50 hidden sm:flex"
               >
                 <Users className="w-4 h-4 mr-2" />
-                Manage Members
+                <span className="hidden md:inline">Manage Members</span>
+                <span className="md:hidden">Members</span>
               </Button>
+              
+              {/* Mobile Members Button */}
               <Button 
+                onClick={() => setIsMemberManagementOpen(true)}
+                variant="outline"
+                size="icon"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50 sm:hidden"
+              >
+                <Users className="w-4 h-4" />
+              </Button>
+                <Button 
                 onClick={() => setIsAddExpenseModalOpen(true)}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+                size="sm"
+                className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 hover:from-blue-600 hover:via-purple-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Expense
+                <span className="hidden sm:inline">Add Expense</span>
+                <span className="sm:hidden">Add</span>
               </Button>
               <UserMenu />
             </div>
@@ -217,11 +215,11 @@ const TripDetails = () => {
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-blue-600" />
+                  <Banknote className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Spent</p>
-                  <p className="text-xl font-bold text-gray-800">${totalExpenses.toFixed(2)}</p>
+                  <p className="text-xl font-bold text-gray-800">{formatCurrency(totalExpenses)}</p>
                 </div>
               </div>
             </CardContent>

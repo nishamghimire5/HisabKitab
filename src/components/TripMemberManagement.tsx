@@ -65,10 +65,7 @@ const TripMemberManagement = ({ open, onOpenChange, trip, onUpdateTrip }: TripMe
       const { error } = await supabase
         .from('trips')
         .update({ members: updatedMembers })
-        .eq('id', trip.id);
-
-      if (error) {
-        console.error('Error removing member:', error);
+        .eq('id', trip.id);      if (error) {
         toast.error('Failed to remove member from trip');
       } else {
         const updatedTrip = { ...trip, members: updatedMembers };
@@ -76,7 +73,6 @@ const TripMemberManagement = ({ open, onOpenChange, trip, onUpdateTrip }: TripMe
         toast.success(`${getDisplayName(email)} removed from trip`);
       }
     } catch (error) {
-      console.error('Error removing member:', error);
       toast.error('Failed to remove member from trip');
     } finally {
       setLoading(false);
@@ -89,21 +85,16 @@ const TripMemberManagement = ({ open, onOpenChange, trip, onUpdateTrip }: TripMe
       return;
     }    setLoading(true);
     try {
-      console.log('Inviting selected friends:', selectedFriends, 'to trip:', trip.id);
-      
       // Get friend profiles to get their emails
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email')
         .in('id', selectedFriends);
 
-      console.log('Friend profiles for invitation:', profiles, 'Error:', profilesError);
-
       if (profilesError) {
-        console.error('Error getting friend profiles:', profilesError);
         toast.error('Failed to get friend information');
         return;
-      }      // Send invitations to each friend
+      }// Send invitations to each friend
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 7); // 7 days from now
       
@@ -114,19 +105,12 @@ const TripMemberManagement = ({ open, onOpenChange, trip, onUpdateTrip }: TripMe
         invited_by: user?.id,
         status: 'pending',
         expires_at: expirationDate.toISOString()
-      }));
-
-      console.log('Invitations to insert:', invitations);
-
-      const { data: insertedData, error: inviteError } = await supabase
+      }));      const { data: insertedData, error: inviteError } = await supabase
         .from('trip_invitations')
         .insert(invitations)
         .select();
 
-      console.log('TripMemberManagement invitation insert result:', insertedData, 'Error:', inviteError);
-
       if (inviteError) {
-        console.error('Error sending invitations:', inviteError);
         toast.error('Failed to send invitations');
         return;
       }
@@ -134,7 +118,6 @@ const TripMemberManagement = ({ open, onOpenChange, trip, onUpdateTrip }: TripMe
       toast.success(`Invitations sent to ${selectedFriends.length} friend(s)!`);
       setSelectedFriends([]);
     } catch (error) {
-      console.error('Error inviting friends:', error);
       toast.error('Failed to invite friends');
     } finally {
       setLoading(false);

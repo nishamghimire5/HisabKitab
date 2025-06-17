@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { User, LogOut, Settings } from 'lucide-react';
+import { User, LogOut, Settings, BookOpen, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,33 +10,32 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ProfileSettingsModal from './ProfileSettingsModal';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<{ username: string | null; full_name: string | null } | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
-      
-      try {
+        try {
         const { data, error } = await supabase
           .from('profiles')
           .select('username, full_name')
           .eq('id', user.id)
           .single();
 
-        if (error) {
-          console.error('Error loading profile:', error);
-        } else {
+        if (!error) {
           setProfile(data);
         }
       } catch (error) {
-        console.error('Error loading profile:', error);
+        // Silent failure - profile will use default values
       }
     };
 
@@ -66,6 +65,17 @@ const UserMenu = () => {
           )}
           <p className="text-xs text-gray-500">{user?.email}</p>        </div>
         <DropdownMenuSeparator />
+        <div className="lg:hidden">
+          <DropdownMenuItem onClick={() => navigate('/docs')}>
+            <BookOpen className="mr-2 h-4 w-4" />
+            User Guide
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/about')}>
+            <Info className="mr-2 h-4 w-4" />
+            About & Contact
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+        </div>
         <DropdownMenuItem onClick={() => setIsProfileModalOpen(true)}>
           <Settings className="mr-2 h-4 w-4" />
           Profile Settings

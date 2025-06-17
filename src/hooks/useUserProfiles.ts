@@ -22,22 +22,18 @@ export const useUserProfiles = (emails: string[] = []) => {
         setProfiles([]);
         setLoading(false);
         return;
-      }
-
-      try {
+      }      try {
         const { data, error } = await supabase
           .from('profiles')
           .select('id, email, full_name, username, avatar_url')
           .in('email', validEmails);
 
         if (error) {
-          console.error('Error fetching user profiles:', error);
           setProfiles([]);
         } else {
           setProfiles(data || []);
         }
       } catch (error) {
-        console.error('Error fetching user profiles:', error);
         setProfiles([]);
       } finally {
         setLoading(false);

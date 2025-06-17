@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trip, Expense, PaymentShare, ParticipantShare } from "@/types/Trip";
 import { Trash2, Plus } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatCurrency } from "@/utils/currency";
 
 interface AddExpenseModalProps {
   open: boolean;
@@ -172,7 +173,7 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="amount">Total Amount ($)</Label>
+              <Label htmlFor="amount">Total Amount (NPR)</Label>
               <Input
                 id="amount"
                 type="number"
@@ -252,15 +253,14 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
             {totalAmount && (
               <div className="text-xs space-y-1 bg-gray-50 p-2 rounded">
                 <div className="flex justify-between">
-                  <span>Total Paid:</span>
-                  <span className={totalPaid === parseFloat(totalAmount) ? "text-green-600" : "text-red-600"}>
-                    ${totalPaid.toFixed(2)}
+                  <span>Total Paid:</span>                  <span className={totalPaid === parseFloat(totalAmount) ? "text-green-600" : "text-red-600"}>
+                    {formatCurrency(totalPaid)}
                   </span>
                 </div>
                 {remaining !== 0 && (
                   <div className="flex justify-between">
                     <span>Remaining to pay:</span>
-                    <span className="text-red-600">${remaining.toFixed(2)}</span>
+                    <span className="text-red-600">{formatCurrency(remaining)}</span>
                   </div>
                 )}
               </div>
@@ -326,7 +326,7 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
               
               {equalParticipants.length > 0 && totalAmount && (
                 <div className="text-sm bg-blue-50 p-2 rounded">
-                  Split among {equalParticipants.length} member{equalParticipants.length !== 1 ? 's' : ''}: ${(parseFloat(totalAmount || "0") / equalParticipants.length).toFixed(2)} each
+                  Split among {equalParticipants.length} member{equalParticipants.length !== 1 ? 's' : ''}: {formatCurrency(parseFloat(totalAmount || "0") / equalParticipants.length)} each
                 </div>
               )}
             </div>
@@ -367,15 +367,14 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
               {totalAmount && (
                 <div className="text-xs space-y-1 bg-gray-50 p-2 rounded">
                   <div className="flex justify-between">
-                    <span>Total Split:</span>
-                    <span className={customSplitTotal === parseFloat(totalAmount) ? "text-green-600" : "text-red-600"}>
-                      ${customSplitTotal.toFixed(2)}
+                    <span>Total Split:</span>                    <span className={customSplitTotal === parseFloat(totalAmount) ? "text-green-600" : "text-red-600"}>
+                      {formatCurrency(customSplitTotal)}
                     </span>
                   </div>
                   {customRemaining !== 0 && (
                     <div className="flex justify-between">
                       <span>Remaining to split:</span>
-                      <span className="text-red-600">${customRemaining.toFixed(2)}</span>
+                      <span className="text-red-600">{formatCurrency(customRemaining)}</span>
                     </div>
                   )}
                 </div>
