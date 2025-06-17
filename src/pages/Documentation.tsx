@@ -33,10 +33,11 @@ const Documentation = () => {
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Getting Started */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calculator className="w-6 h-6 text-blue-500" />
+        <Card className="mb-8">          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <div className="w-12 h-12 flex items-center justify-center">
+                <img src="/logo.jpg" alt="HisabKitab Logo" className="h-12 w-12" />
+              </div>
               Getting Started
             </CardTitle>
           </CardHeader>

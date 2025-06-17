@@ -189,10 +189,9 @@ const Index = () => {
               <div 
                 className="cursor-pointer flex-shrink-0 group transition-all duration-200 hover:scale-105"
                 onClick={() => navigate('/')}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-primary rounded-xl shadow-soft group-hover:shadow-glow transition-all duration-300 flex items-center justify-center">
-                    <Calculator className="h-6 w-6 text-white" />
+              >                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 flex items-center justify-center">
+                    <img src="/logo.jpg" alt="HisabKitab Logo" className="h-12 w-12" />
                   </div>
                   <div>
                     <h1 className="text-xl md:text-2xl font-display font-bold gradient-text-primary">
