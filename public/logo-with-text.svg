@@ -1,0 +1,13 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon -->
+  <rect x="4" y="4" width="32" height="32" rx="8" fill="#3B82F6"/>
+  <path d="M12 16h16v2H12v-2z" fill="white"/>
+  <path d="M12 20h12v2H12v-2z" fill="white"/>
+  <path d="M12 24h8v2H12v-2z" fill="white"/>
+  <circle cx="27" cy="24" r="3" fill="white"/>
+  <path d="M26 23h2v2h-2v-2z" fill="#3B82F6"/>
+  
+  <!-- Text -->
+  <text x="44" y="16" font-family="Arial, sans-serif" font-weight="600" font-size="11" fill="#1F2937">SplitWise</text>
+  <text x="44" y="28" font-family="Arial, sans-serif" font-weight="400" font-size="9" fill="#6B7280">Smart</text>
+</svg>
