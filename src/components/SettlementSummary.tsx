@@ -6,15 +6,30 @@ import { calculateMemberBalances } from "@/utils/balanceCalculations";
 import { calculateSettlements } from "@/utils/settlementCalculations";
 import MemberBalances from "./MemberBalances";
 import SettlementRecommendations from "./SettlementRecommendations";
+import { useUserProfiles } from "@/hooks/useUserProfiles";
 
 interface SettlementSummaryProps {
   trip: Trip;
 }
 
 const SettlementSummary = ({ trip }: SettlementSummaryProps) => {
+  const { getDisplayName } = useUserProfiles(trip.members);
   const memberBalances = calculateMemberBalances(trip);
   const settlements = calculateSettlements([...memberBalances]);
   const totalExpenses = trip.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  // Update member balances with display names
+  const memberBalancesWithDisplayNames = memberBalances.map(balance => ({
+    ...balance,
+    name: getDisplayName(balance.name)
+  }));
+
+  // Update settlements with display names
+  const settlementsWithDisplayNames = settlements.map(settlement => ({
+    ...settlement,
+    from: getDisplayName(settlement.from),
+    to: getDisplayName(settlement.to)
+  }));
 
   return (
     <Card className="bg-white/80 backdrop-blur-sm">
@@ -23,10 +38,9 @@ const SettlementSummary = ({ trip }: SettlementSummaryProps) => {
           <TrendingUp className="w-5 h-5" />
           Settlement Summary
         </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <MemberBalances balances={memberBalances} />
-        <SettlementRecommendations settlements={settlements} />
+      </CardHeader>      <CardContent className="space-y-6">
+        <MemberBalances balances={memberBalancesWithDisplayNames} />
+        <SettlementRecommendations settlements={settlementsWithDisplayNames} />
 
         {/* Summary Stats */}
         <div className="pt-4 border-t">

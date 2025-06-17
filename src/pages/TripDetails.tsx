@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Plus, Users, Calculator, DollarSign } from "lucide-react";
@@ -10,16 +9,19 @@ import AddExpenseModal from "@/components/AddExpenseModal";
 import ExpenseList from "@/components/ExpenseList";
 import SettlementSummary from "@/components/SettlementSummary";
 import UserMenu from "@/components/UserMenu";
+import TripMemberManagement from "@/components/TripMemberManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfiles } from "@/hooks/useUserProfiles";
 import { toast } from "sonner";
 
 const TripDetails = () => {
-  const { id } = useParams<{ id: string }>();
-  const [trip, setTrip] = useState<Trip | null>(null);
+  const { id } = useParams<{ id: string }>();  const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
+  const [isMemberManagementOpen, setIsMemberManagementOpen] = useState(false);
   const { user } = useAuth();
+  const { getDisplayName } = useUserProfiles(trip?.members || []);
   useEffect(() => {
     const loadTrip = async () => {
       if (!id || !user) {
@@ -58,7 +60,9 @@ const TripDetails = () => {
           id: tripData.id,
           name: tripData.name,
           description: tripData.description || '',
-          members: tripData.members || [],          expenses: expensesData ? expensesData.map(expense => ({
+          members: tripData.members || [],
+          created_by: tripData.created_by,
+          expenses: expensesData ? expensesData.map(expense => ({
             id: expense.id,
             description: expense.description,
             amount: Number(expense.amount),
@@ -86,11 +90,11 @@ const TripDetails = () => {
   const updateTrip = async (updatedTrip: Trip) => {
     try {
       const { error } = await supabase
-        .from('trips')
-        .update({
+        .from('trips')        .update({
           name: updatedTrip.name,
           description: updatedTrip.description,
-          members: updatedTrip.members
+          members: updatedTrip.members,
+          created_by: updatedTrip.created_by
         })
         .eq('id', updatedTrip.id);
 
@@ -106,6 +110,39 @@ const TripDetails = () => {
       toast.error('Failed to update trip');
     }
   };
+
+  const addExpense = async (updatedTrip: Trip) => {
+    try {
+      // Get the new expense (last one added)
+      const newExpense = updatedTrip.expenses[updatedTrip.expenses.length - 1];      // Save expense to Supabase
+      const { error } = await supabase
+        .from('expenses')
+        .insert({
+          trip_id: updatedTrip.id,
+          description: newExpense.description,
+          amount: newExpense.amount,
+          paid_by: newExpense.paidBy as any,
+          participants: newExpense.participants as any,
+          date: newExpense.date,
+          category: newExpense.category || '',
+          split_type: newExpense.splitType
+        });
+
+      if (error) {
+        console.error('Error saving expense:', error);
+        toast.error('Failed to save expense');
+        return;
+      }
+
+      // Update local state
+      setTrip(updatedTrip);
+      toast.success('Expense added successfully');
+    } catch (error) {
+      console.error('Error saving expense:', error);
+      toast.error('Failed to save expense');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -151,8 +188,15 @@ const TripDetails = () => {
                   <p className="text-sm text-gray-600">{trip.description}</p>
                 )}
               </div>
-            </div>
-            <div className="flex items-center gap-4">
+            </div>            <div className="flex items-center gap-4">
+              <Button 
+                onClick={() => setIsMemberManagementOpen(true)}
+                variant="outline"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Manage Members
+              </Button>
               <Button 
                 onClick={() => setIsAddExpenseModalOpen(true)}
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
@@ -220,10 +264,9 @@ const TripDetails = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {trip.members.map((member, index) => (
+            <div className="flex flex-wrap gap-2">              {trip.members.map((member, index) => (
                 <Badge key={index} variant="secondary" className="bg-blue-50 text-blue-700">
-                  {member}
+                  {getDisplayName(member)}
                 </Badge>
               ))}
             </div>
@@ -238,11 +281,16 @@ const TripDetails = () => {
             <SettlementSummary trip={trip} />
           </div>
         </div>
-      </div>
-
-      <AddExpenseModal 
+      </div>      <AddExpenseModal 
         open={isAddExpenseModalOpen}
         onOpenChange={setIsAddExpenseModalOpen}
+        trip={trip}
+        onUpdateTrip={addExpense}
+      />
+      
+      <TripMemberManagement
+        open={isMemberManagementOpen}
+        onOpenChange={setIsMemberManagementOpen}
         trip={trip}
         onUpdateTrip={updateTrip}
       />

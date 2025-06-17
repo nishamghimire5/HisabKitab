@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, Receipt } from "lucide-react";
 import { Trip, Expense } from "@/types/Trip";
+import { useUserProfiles } from "@/hooks/useUserProfiles";
 
 interface ExpenseListProps {
   trip: Trip;
@@ -11,6 +12,8 @@ interface ExpenseListProps {
 }
 
 const ExpenseList = ({ trip, onUpdateTrip }: ExpenseListProps) => {
+  const { getDisplayName } = useUserProfiles(trip.members);
+  
   const handleDeleteExpense = (expenseId: string) => {
     if (confirm("Are you sure you want to delete this expense?")) {
       const updatedTrip = {
@@ -24,30 +27,28 @@ const ExpenseList = ({ trip, onUpdateTrip }: ExpenseListProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
-
   const formatPayers = (payers: any) => {
     if (Array.isArray(payers)) {
-      return payers.map(p => `${p.member} ($${(p.amount || 0).toFixed(2)})`).join(', ');
+      return payers.map(p => `${getDisplayName(p.member)} ($${(p.amount || 0).toFixed(2)})`).join(', ');
     } else {
       return payers;
     }
   };
-
   const formatParticipants = (expense: Expense) => {
     if (expense.splitType === 'equal') {
       // For backward compatibility and equal splits
       if (Array.isArray(expense.participants) && expense.participants.length > 0) {
         if (typeof expense.participants[0] === 'string') {
           // Legacy format
-          return expense.participants.map(p => `${p} ($${(expense.amount / expense.participants.length).toFixed(2)})`).join(', ');
+          return expense.participants.map(p => `${getDisplayName(p as unknown as string)} ($${(expense.amount / expense.participants.length).toFixed(2)})`).join(', ');
         } else {
           // New format with equal amounts
-          return expense.participants.map(p => `${p.member} ($${(p.amount || 0).toFixed(2)})`).join(', ');
+          return expense.participants.map((p: any) => `${getDisplayName(p.member)} ($${(p.amount || 0).toFixed(2)})`).join(', ');
         }
       }
     } else {
       // Custom split
-      return expense.participants.map(p => `${p.member} ($${(p.amount || 0).toFixed(2)})`).join(', ');
+      return expense.participants.map((p: any) => `${getDisplayName(p.member)} ($${(p.amount || 0).toFixed(2)})`).join(', ');
     }
     return '';
   };

@@ -1,5 +1,6 @@
 
-import { User, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,15 +10,46 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import ProfileSettingsModal from './ProfileSettingsModal';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<{ username: string | null; full_name: string | null } | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username, full_name')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error loading profile:', error);
+        } else {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
     toast.success('Signed out successfully');
   };
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'User';
+  const username = profile?.username;
 
   return (
     <DropdownMenu>
@@ -28,15 +60,26 @@ const UserMenu = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-1.5">
-          <p className="text-sm font-medium">{user?.user_metadata?.full_name || 'User'}</p>
-          <p className="text-xs text-gray-500">{user?.email}</p>
-        </div>
+          <p className="text-sm font-medium">{displayName}</p>
+          {username && (
+            <p className="text-xs text-blue-600">@{username}</p>
+          )}
+          <p className="text-xs text-gray-500">{user?.email}</p>        </div>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setIsProfileModalOpen(true)}>
+          <Settings className="mr-2 h-4 w-4" />
+          Profile Settings
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
           <LogOut className="mr-2 h-4 w-4" />
           Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>
+
+      <ProfileSettingsModal
+        open={isProfileModalOpen}
+        onOpenChange={setIsProfileModalOpen}
+      />
     </DropdownMenu>
   );
 };

@@ -1,9 +1,9 @@
 {
-  "name": "splitwise-smart",
+  "name": "settleup-smart",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "SplitWise Smart - A modern expense tracking application for groups and trips",
+  "description": "SettleUp Smart - A modern expense tracking application for groups and trips",
   "keywords": [
     "expense-tracker",
     "split-bills",

@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CreateTripModal from "@/components/CreateTripModal";
 import TripCard from "@/components/TripCard";
 import UserMenu from "@/components/UserMenu";
+import InvitationNotifications from "@/components/InvitationNotifications";
+import SharedTrips from "@/components/SharedTrips";
+import FriendsManager from "@/components/FriendsManager";
 import { Trip } from "@/types/Trip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,36 +18,45 @@ const Index = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
-
-  // Load trips from Supabase
+  const { user } = useAuth();  // Load trips from Supabase
   useEffect(() => {
     const loadTrips = async () => {
       if (!user) return;
-      
       try {
-        const { data, error } = await supabase
+        console.log('Loading trips for user:', user.email, 'user.id:', user.id);
+        
+        // Use simple trips table query for now to avoid schema issues
+        const { data: allTrips, error: tripsError } = await supabase
           .from('trips')
           .select('*')
+          .contains('members', [user.email])
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error loading trips:', error);
-          toast.error('Failed to load trips');
-        } else {
-          // Convert Supabase data to Trip format
-          const formattedTrips: Trip[] = data.map(trip => ({
-            id: trip.id,
-            name: trip.name,
-            description: trip.description || '',
-            members: trip.members || [],
-            expenses: [], // Will be loaded separately when needed
-            createdAt: trip.created_at
-          }));
-          setTrips(formattedTrips);
+        console.log('Direct trips query result:', allTrips, 'Error:', tripsError);
+
+        if (tripsError) {
+          console.error('Error loading trips:', tripsError);
+          console.error('Full trips error object:', JSON.stringify(tripsError, null, 2));
+          toast.error(`Failed to load trips: ${tripsError.message}`);
+          return;
         }
+
+        // Convert Supabase data to Trip format
+        const formattedTrips: Trip[] = (allTrips || []).map(trip => ({
+          id: trip.id,
+          name: trip.name,
+          description: trip.description || '',
+          members: trip.members || [],
+          expenses: [], // Will be loaded separately when needed
+          createdAt: trip.created_at,
+          created_by: trip.created_by
+        }));
+
+        console.log('Formatted trips:', formattedTrips);
+        setTrips(formattedTrips);
       } catch (error) {
         console.error('Error loading trips:', error);
+        console.error('Full catch error object:', JSON.stringify(error, null, 2));
         toast.error('Failed to load trips');
       } finally {
         setLoading(false);
@@ -52,8 +64,7 @@ const Index = () => {
     };
 
     loadTrips();
-  }, [user]);
-  const handleCreateTrip = async (newTrip: Omit<Trip, 'id' | 'createdAt'>) => {
+  }, [user]);  const handleCreateTrip = async (newTrip: Omit<Trip, 'id' | 'createdAt'>) => {
     if (!user) return;
 
     try {
@@ -88,10 +99,62 @@ const Index = () => {
 
       setTrips([trip, ...trips]);
       setIsCreateModalOpen(false);
-      toast.success('Trip created successfully!');
+
+      // Send invitations to selected friends
+      if (newTrip.initialFriends && newTrip.initialFriends.length > 0) {
+        try {
+          await sendFriendInvitations(data.id, newTrip.initialFriends);
+          toast.success(`Trip created! Invitations sent to ${newTrip.initialFriends.length} friend(s).`);
+        } catch (inviteError) {
+          console.error('Error sending friend invitations:', inviteError);
+          toast.success('Trip created successfully!');
+          toast.error('Some invitations failed to send. You can invite them manually.');
+        }
+      } else {
+        toast.success('Trip created successfully!');
+      }
     } catch (error) {
       console.error('Error creating trip:', error);
       toast.error('Failed to create trip');
+    }
+  };
+  const sendFriendInvitations = async (tripId: string, friendIds: string[]) => {
+    console.log('Sending invitations to friends:', friendIds, 'for trip:', tripId);
+    
+    // Get friend profiles to get their emails
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .in('id', friendIds);
+
+    console.log('Friend profiles retrieved:', profiles, 'Error:', profilesError);
+
+    if (profilesError) {
+      throw new Error('Failed to get friend profiles');
+    }    // Send invitations to each friend
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 7); // 7 days from now
+    
+    const invitations = profiles.map(profile => ({
+      trip_id: tripId,
+      invited_user_id: profile.id,
+      invited_email: profile.email,
+      invited_by: user.id,
+      status: 'pending',
+      expires_at: expirationDate.toISOString()
+    }));
+
+    console.log('Invitations to insert:', invitations);
+
+    const { data: insertedData, error: inviteError } = await supabase
+      .from('trip_invitations')
+      .insert(invitations)
+      .select();
+
+    console.log('Invitation insert result:', insertedData, 'Error:', inviteError);
+
+    if (inviteError) {
+      throw new Error('Failed to send invitations');
     }
   };
 
@@ -135,11 +198,11 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                SplitWise Smart
+                SettleUp Smart
               </h1>
               <p className="text-gray-600 text-sm">Smart expense splitting made simple</p>
-            </div>
-            <div className="flex items-center gap-4">
+            </div>            <div className="flex items-center gap-4">
+              <FriendsManager />
               <Button 
                 onClick={() => setIsCreateModalOpen(true)}
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
@@ -151,16 +214,21 @@ const Index = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
+      </div>      <div className="container mx-auto px-4 py-8">
+        {/* Invitation Notifications */}
+        <InvitationNotifications />
+          {/* Shared Trips Section */}
+        <div className="mb-8">
+          <SharedTrips myTrips={trips} onDeleteTrip={handleDeleteTrip} />
+        </div>
+        
         {trips.length === 0 ? (
           // Empty State
           <div className="text-center py-16">
             <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
               <Calculator className="w-12 h-12 text-blue-500" />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Welcome to SplitWise Smart!</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Welcome to SettleUp Smart!</h2>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
               Create your first trip to start splitting expenses with friends. Perfect for vacations, group dinners, and shared activities.
             </p>
@@ -204,8 +272,7 @@ const Index = () => {
                   onDelete={handleDeleteTrip}
                 />
               ))}
-            </div>
-          </div>
+            </div>          </div>
         )}
       </div>
 

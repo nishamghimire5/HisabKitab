@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Calendar, DollarSign, Trash2 } from "lucide-react";
 import { Trip } from "@/types/Trip";
 import { Link } from "react-router-dom";
+import { useUserProfiles } from "@/hooks/useUserProfiles";
 
 interface TripCardProps {
   trip: Trip;
@@ -14,6 +15,7 @@ interface TripCardProps {
 const TripCard = ({ trip, onDelete }: TripCardProps) => {
   const totalExpenses = trip.expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const createdDate = new Date(trip.createdAt).toLocaleDateString();
+  const { getDisplayName } = useUserProfiles(trip.members);
 
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -70,12 +72,10 @@ const TripCard = ({ trip, onDelete }: TripCardProps) => {
               <Badge variant="secondary" className="bg-blue-50 text-blue-700">
                 {trip.expenses.length} expense{trip.expenses.length !== 1 ? 's' : ''}
               </Badge>
-            </div>
-
-            <div className="flex flex-wrap gap-1 pt-2">
+            </div>            <div className="flex flex-wrap gap-1 pt-2">
               {trip.members.map((member, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
-                  {member}
+                  {getDisplayName(member)}
                 </Badge>
               ))}
             </div>

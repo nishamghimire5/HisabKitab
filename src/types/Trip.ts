@@ -6,6 +6,8 @@ export interface Trip {
   members: string[];
   expenses: Expense[];
   createdAt: string;
+  created_by?: string;
+  initialFriends?: string[]; // For friend selection during trip creation
 }
 
 export interface Expense {

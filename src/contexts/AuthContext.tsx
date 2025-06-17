@@ -48,10 +48,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
-
   const signUp = async (email: string, password: string, fullName?: string) => {
-    // Use the current window location for redirect
-    const redirectUrl = window.location.origin;
+    // Use the current window location for redirect, but make sure we go to the verification page
+    const redirectUrl = `${window.location.origin}/email-verification`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -60,6 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName || '',
+          username: email.split('@')[0], // Default username as email prefix
+          created_at: new Date().toISOString(),
         }
       }
     });
@@ -79,13 +80,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     await supabase.auth.signOut();
   };
-
   const resendConfirmation = async (email: string) => {
+    // Redirect to the dedicated email verification page
+    const redirectUrl = `${window.location.origin}/email-verification`;
+    
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: window.location.origin
+        emailRedirectTo: redirectUrl
       }
     });
     
