@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Mail, BookOpen, Info } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +18,7 @@ const Auth = () => {
   const [confirmationEmail, setConfirmationEmail] = useState('');
   const { signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,8 +92,8 @@ const Auth = () => {
       setLoading(false);
     }
   };
-
-  return (    <div className="h-screen bg-[#050530] flex flex-col relative overflow-hidden">
+  return (
+    <div className={`${isMobile ? 'min-h-screen' : 'h-screen'} bg-[#050530] flex flex-col relative ${isMobile ? '' : 'overflow-hidden'}`}>
       {/* Futuristic Background Elements */}
       <div className="absolute inset-0 z-0">
         {/* Gradient orbs */}
@@ -125,112 +127,138 @@ const Auth = () => {
             </Link>
           </div>
         </div>
-      </nav>      {/* Main Content with Logo Centered and Floating Form */}
-      <div className="flex-1 relative flex items-center justify-center overflow-y-auto">
-        {/* Logo Center Section */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 
+      </nav>      
+        {/* Main Content with Logo Centered and Floating Form */}
+      <div className={`flex-1 relative ${isMobile ? 'overflow-y-auto' : 'flex items-center justify-center overflow-y-auto'}`}>
+        {/* Logo Center Section - Hidden on mobile */}
+        {!isMobile && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 
                       w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] md:w-[340px] md:h-[340px] lg:w-[380px] lg:h-[380px]
                       rounded-full bg-gradient-to-br from-[#0a0a4a]/80 to-[#0a0a4a]/40 backdrop-blur-lg
                       border border-blue-500/20 shadow-[0_0_40px_rgba(0,100,255,0.25)] 
                       flex flex-col items-center justify-center">
-          {/* Logo */}
-          <div className="w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px] 
-                        relative flex items-center justify-center">
-            <img 
-              src="/hisabkitab_new_final_logo.png" 
-              alt="HisabKitab" 
-              className="w-full h-full object-contain scale-110"
-            />
-            
-            {/* Animated rings */}
-            <div className="absolute inset-0 rounded-full border border-blue-400/20 animate-ping" 
-                style={{animationDuration: '3s'}}></div>
-            <div className="absolute inset-0 rounded-full border-2 border-cyan-500/20 animate-ping" 
-                style={{animationDuration: '4s'}}></div>
-            <div className="absolute inset-0 rounded-full border border-purple-500/10 animate-ping" 
-                style={{animationDuration: '7s'}}></div>
-          </div>
+            {/* Logo */}
+            <div className="w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px] 
+                          relative flex items-center justify-center">
+              <img 
+                src="/hisabkitab_new_final_logo.png" 
+                alt="HisabKitab" 
+                className="w-full h-full object-contain scale-110"
+              />
+              
+              {/* Animated rings */}
+              <div className="absolute inset-0 rounded-full border border-blue-400/20 animate-ping" 
+                  style={{animationDuration: '3s'}}></div>
+              <div className="absolute inset-0 rounded-full border-2 border-cyan-500/20 animate-ping" 
+                  style={{animationDuration: '4s'}}></div>
+              <div className="absolute inset-0 rounded-full border border-purple-500/10 animate-ping" 
+                  style={{animationDuration: '7s'}}></div>
+            </div>
             {/* Text below logo */}
-          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
-            <div className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent text-lg font-bold tracking-wide">
-              HisabKitab
-            </div>
-            <div className="text-blue-200/80 text-sm mt-1 font-medium">
-              {isLogin ? 'Welcome back to smart expense tracking' : 'Join thousands managing expenses smartly'}
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
+              <div className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent text-lg font-bold tracking-wide">
+                HisabKitab
+              </div>
+              <div className="text-blue-200/80 text-sm mt-1 font-medium">
+                {isLogin ? 'Welcome back to smart expense tracking' : 'Join thousands managing expenses smartly'}
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Form Container */}        <div className="w-full max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
-          <form onSubmit={handleSubmit} className="w-full max-w-xl md:max-w-none flex flex-col md:flex-row items-center justify-around">            {/* Left Side - Features */}            <div className="w-full md:w-[60%] md:max-w-[520px] space-y-6 mt-[320px] md:mt-0 mb-6 md:mb-0 z-10
-                          md:mr-[220px] lg:mr-[260px] md:-ml-12 lg:-ml-20">
-              <div className="space-y-4 relative">
-                {/* Glow effect behind the entire features section */}
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 
-                              rounded-2xl blur-xl scale-110 opacity-60"></div>
-                
-                <div className="relative bg-gradient-to-br from-blue-900/40 to-purple-900/30 backdrop-blur-md 
-                              rounded-2xl p-6 border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 
-                               bg-clip-text text-transparent mb-6 text-center">
-                    Why Choose HisabKitab?
-                  </h3>                  <div className="space-y-4">                    <div className="flex items-start gap-5 p-6 rounded-xl bg-gradient-to-br from-blue-800/30 to-blue-900/20 
-                                  backdrop-blur-sm border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300
-                                  hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] group min-h-[85px] w-full">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 mt-2 flex-shrink-0
-                                    group-hover:scale-125 transition-transform duration-300"></div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-blue-200 font-semibold text-sm leading-tight mb-2">Split Bills Instantly</h4>
-                        <p className="text-blue-300/70 text-xs leading-relaxed">Smart calculations for fair expense division across all group members</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-5 p-6 rounded-xl bg-gradient-to-br from-purple-800/30 to-purple-900/20 
-                                  backdrop-blur-sm border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300
-                                  hover:shadow-[0_0_20px_rgba(147,51,234,0.2)] group min-h-[85px] w-full">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 mt-2 flex-shrink-0
-                                    group-hover:scale-125 transition-transform duration-300"></div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-blue-200 font-semibold text-sm leading-tight mb-2">Track in NPR</h4>
-                        <p className="text-blue-300/70 text-xs leading-relaxed">Designed specifically for Nepali currency and cultural needs</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-5 p-6 rounded-xl bg-gradient-to-br from-cyan-800/30 to-cyan-900/20 
-                                  backdrop-blur-sm border border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300
-                                  hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] group min-h-[85px] w-full">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 to-teal-500 mt-2 flex-shrink-0
-                                    group-hover:scale-125 transition-transform duration-300"></div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-blue-200 font-semibold text-sm leading-tight mb-2">Smart Settlements</h4>
-                        <p className="text-blue-300/70 text-xs leading-relaxed">Optimal payment suggestions to settle debts efficiently</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-5 p-6 rounded-xl bg-gradient-to-br from-indigo-800/30 to-indigo-900/20 
-                                  backdrop-blur-sm border border-indigo-500/30 hover:border-indigo-400/50 transition-all duration-300
-                                  hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] group min-h-[85px] w-full">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 mt-2 flex-shrink-0
-                                    group-hover:scale-125 transition-transform duration-300"></div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-blue-200 font-semibold text-sm leading-tight mb-2">Group Management</h4>
-                        <p className="text-blue-300/70 text-xs leading-relaxed">Manage multiple trips and groups with ease and precision</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Additional glow elements */}
-                  <div className="absolute -top-2 -left-2 w-4 h-4 bg-cyan-400/20 rounded-full blur-sm animate-pulse"></div>
-                  <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-purple-400/20 rounded-full blur-md animate-pulse" 
-                       style={{animationDelay: '1s'}}></div>
-                  <div className="absolute top-1/2 -left-3 w-2 h-2 bg-blue-400/30 rounded-full blur-sm animate-ping"
-                       style={{animationDuration: '3s'}}></div>
+        )}        {/* Form Container */}
+        <div className="w-full max-w-6xl mx-auto px-4">
+          {/* Mobile branding at the top */}
+          {isMobile && (
+            <div className="w-full flex flex-col items-center justify-center py-6">
+              <img 
+                src="/hisabkitab_new_final_logo.png" 
+                alt="HisabKitab" 
+                className="w-20 h-20 object-contain"
+              />
+              <div className="text-center mt-3">
+                <div className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent text-lg font-bold tracking-wide">
+                  HisabKitab
+                </div>
+                <div className="text-blue-200/80 text-sm mt-1 font-medium">
+                  {isLogin ? 'Welcome back!' : 'Join us today!'}
                 </div>
               </div>
             </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className={`w-full ${isMobile ? 'max-w-sm mx-auto' : 'max-w-xl md:max-w-none flex flex-col md:flex-row items-center justify-around'}`}>
+            {/* Left Side - Features - Hidden on mobile */}
+            {!isMobile && (
+              <div className="w-full md:w-[60%] md:max-w-[520px] space-y-6 mt-[320px] md:mt-0 mb-6 md:mb-0 z-10 md:mr-[220px] lg:mr-[260px] md:-ml-12 lg:-ml-20">
+                <div className="space-y-4 relative">
+                  {/* Glow effect behind the entire features section */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 
+                                rounded-2xl blur-xl scale-110 opacity-60"></div>
+                  
+                  <div className="relative bg-gradient-to-br from-blue-900/40 to-purple-900/30 backdrop-blur-md 
+                                rounded-2xl p-6 border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 
+                                 bg-clip-text text-transparent mb-6 text-center">
+                      Why Choose HisabKitab?
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-5 p-6 rounded-xl bg-gradient-to-br from-blue-800/30 to-blue-900/20 
+                                    backdrop-blur-sm border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300
+                                    hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] group min-h-[85px] w-full">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 mt-2 flex-shrink-0
+                                      group-hover:scale-125 transition-transform duration-300"></div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-blue-200 font-semibold text-sm leading-tight mb-2">Split Bills Instantly</h4>
+                          <p className="text-blue-300/70 text-xs leading-relaxed">Smart calculations for fair expense division across all group members</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-5 p-6 rounded-xl bg-gradient-to-br from-purple-800/30 to-purple-900/20 
+                                    backdrop-blur-sm border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300
+                                    hover:shadow-[0_0_20px_rgba(147,51,234,0.2)] group min-h-[85px] w-full">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 mt-2 flex-shrink-0
+                                      group-hover:scale-125 transition-transform duration-300"></div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-blue-200 font-semibold text-sm leading-tight mb-2">Track in NPR</h4>
+                          <p className="text-blue-300/70 text-xs leading-relaxed">Designed specifically for Nepali currency and cultural needs</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-5 p-6 rounded-xl bg-gradient-to-br from-cyan-800/30 to-cyan-900/20 
+                                    backdrop-blur-sm border border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300
+                                    hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] group min-h-[85px] w-full">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 to-teal-500 mt-2 flex-shrink-0
+                                      group-hover:scale-125 transition-transform duration-300"></div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-blue-200 font-semibold text-sm leading-tight mb-2">Smart Settlements</h4>
+                          <p className="text-blue-300/70 text-xs leading-relaxed">Optimal payment suggestions to settle debts efficiently</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-5 p-6 rounded-xl bg-gradient-to-br from-indigo-800/30 to-indigo-900/20 
+                                    backdrop-blur-sm border border-indigo-500/30 hover:border-indigo-400/50 transition-all duration-300
+                                    hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] group min-h-[85px] w-full">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 mt-2 flex-shrink-0
+                                      group-hover:scale-125 transition-transform duration-300"></div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-blue-200 font-semibold text-sm leading-tight mb-2">Group Management</h4>
+                          <p className="text-blue-300/70 text-xs leading-relaxed">Manage multiple trips and groups with ease and precision</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Additional glow elements */}
+                    <div className="absolute -top-2 -left-2 w-4 h-4 bg-cyan-400/20 rounded-full blur-sm animate-pulse"></div>
+                    <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-purple-400/20 rounded-full blur-md animate-pulse" 
+                         style={{animationDelay: '1s'}}></div>
+                    <div className="absolute top-1/2 -left-3 w-2 h-2 bg-blue-400/30 rounded-full blur-sm animate-ping"
+                         style={{animationDuration: '3s'}}></div>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Right Side - Login Form */}
-            <div className="w-full md:w-[40%] md:max-w-[320px] space-y-6 z-10 md:ml-[250px] lg:ml-[300px]">
+            <div className={`w-full ${isMobile ? 'space-y-4' : 'md:w-[40%] md:max-w-[320px] md:ml-[250px] lg:ml-[300px] space-y-6'} z-10`}>
               {needsConfirmation && (
                 <div className="bg-blue-900/30 backdrop-blur-sm border border-blue-400/30 p-3 rounded-lg">
                   <div className="flex items-start gap-2">
@@ -383,7 +411,8 @@ const Auth = () => {
           </form>
         </div>
       </div>
-        {/* Footer */}
+      
+      {/* Footer */}
       <footer className="relative z-10 w-full text-center py-3 text-xs text-blue-300/70 space-y-1">
         <div className="flex justify-center items-center gap-3 text-xs">
           <Link to="/privacy" className="hover:text-cyan-400 transition-colors">
