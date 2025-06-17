@@ -1,9 +1,9 @@
 {
-  "name": "settleup-smart",
+  "name": "hisabkitab",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "SettleUp Smart - A modern expense tracking application for groups and trips",
+  "description": "Hisabkitab - A modern expense tracking application for groups and trips in Nepal",
   "keywords": [
     "expense-tracker",
     "split-bills",

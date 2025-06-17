@@ -196,7 +196,7 @@ const Index = () => {
                   </div>
                   <div>
                     <h1 className="text-xl md:text-2xl font-display font-bold gradient-text-primary">
-                      SettleUp Smart
+                      HisabKitab
                     </h1>
                     <p className="text-gray-600 text-xs md:text-sm font-medium">Smart expense splitting made simple</p>
                   </div>
@@ -254,7 +254,7 @@ const Index = () => {
             <div className="w-28 h-28 mx-auto mb-8 bg-gradient-primary rounded-3xl flex items-center justify-center shadow-strong animate-float">
               <Calculator className="w-14 h-14 text-white" />
             </div>
-            <h2 className="text-4xl font-display font-bold text-gray-800 mb-4 gradient-text-primary">Welcome to SettleUp Smart!</h2>
+            <h2 className="text-4xl font-display font-bold text-gray-800 mb-4 gradient-text-primary">Welcome to HisabKitab!</h2>
             <p className="text-lg text-gray-600 mb-12 max-w-lg mx-auto font-medium leading-relaxed">
               Create your first trip to start splitting expenses with friends. Perfect for vacations, group dinners, and shared activities.
             </p>

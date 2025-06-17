@@ -8,6 +8,6 @@
   <path d="M26 23h2v2h-2v-2z" fill="#3B82F6"/>
   
   <!-- Text -->
-  <text x="44" y="16" font-family="Arial, sans-serif" font-weight="600" font-size="11" fill="#1F2937">SettleUp</text>
+  <text x="44" y="16" font-family="Arial, sans-serif" font-weight="600" font-size="11" fill="#1F2937">HisabKitab</text>
   <text x="44" y="28" font-family="Arial, sans-serif" font-weight="400" font-size="9" fill="#6B7280">Smart</text>
 </svg>

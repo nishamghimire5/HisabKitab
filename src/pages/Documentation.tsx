@@ -22,7 +22,7 @@ const Documentation = () => {
               <span className="sm:hidden">Back</span>
             </Button>
             <div className="text-center flex-1 px-4">              <h1 className="text-lg md:text-2xl font-display font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                SettleUp Smart Guide
+                HisabKitab Guide
               </h1>
               <p className="text-gray-600 text-xs md:text-sm font-medium">Everything you need to know</p>
             </div>
@@ -42,7 +42,7 @@ const Documentation = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-700">
-              SettleUp Smart is your go-to app for splitting expenses with friends, family, or colleagues. 
+              HisabKitab is your go-to app for splitting expenses with friends, family, or colleagues. 
               Whether you're planning a vacation, organizing a group dinner, or managing shared household expenses, 
               we make it simple to track who owes what.
             </p>

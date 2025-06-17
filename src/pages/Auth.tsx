@@ -90,7 +90,7 @@ const Auth = () => {
             <Calculator className="w-8 h-8 text-blue-500" />
           </div>
           <CardTitle className="text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            SettleUp Smart
+            HisabKitab
           </CardTitle>
           <CardDescription>
             {isLogin ? 'Welcome back! Sign in to your account.' : 'Create your account to get started.'}

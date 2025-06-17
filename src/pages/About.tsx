@@ -27,7 +27,7 @@ const About = () => {
               </Button>
               <div className="text-center flex-1 px-4">
                 <h1 className="text-lg md:text-2xl font-display font-bold gradient-text-primary">
-                  About SettleUp Smart
+                  About HisabKitab
                 </h1>
                 <p className="text-gray-600 text-xs md:text-sm font-medium">Meet the developer & get in touch</p>
               </div>
@@ -45,18 +45,18 @@ const About = () => {
               <div className="w-10 h-10 bg-gradient-secondary rounded-xl flex items-center justify-center">
                 <Heart className="w-5 h-5 text-white" />
               </div>
-              About SettleUp Smart
+              About HisabKitab
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-gray-700 text-lg leading-relaxed font-medium">
-              SettleUp Smart was born from the frustration of manually calculating who owes what after group trips and shared expenses. 
+              HisabKitab was born from the frustration of manually calculating who owes what after group trips and shared expenses. 
               We've all been there - trying to figure out complex splits with spreadsheets or napkin math.
             </p>
             <p className="text-gray-700 leading-relaxed">
               This app simplifies expense splitting with intelligent algorithms that minimize the number of transactions needed 
               while keeping track of everything transparently. Whether you're splitting a dinner bill, managing vacation expenses,
-              or handling ongoing shared costs, SettleUp Smart makes it effortless.
+              or handling ongoing shared costs, HisabKitab makes it effortless.
             </p>
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
               <h4 className="font-semibold text-gray-800 mb-3">Key Features:</h4>
@@ -84,7 +84,7 @@ const About = () => {
               <div className="flex-1 space-y-4">
                 <p className="text-gray-700">
                   Hi! I'm Nisham Ghimire, a passionate developer who loves creating practical solutions to everyday problems. 
-                  SettleUp Smart combines my experience in full-stack development with a genuine need for better expense management tools.
+                  HisabKitab combines my experience in full-stack development with a genuine need for better expense management tools.
                 </p>
                 <p className="text-gray-700">
                   This project was built using modern web technologies including React, TypeScript, Supabase, and Tailwind CSS, 
@@ -133,7 +133,7 @@ const About = () => {
           <CardContent className="space-y-6">
             <p className="text-gray-700">
               Have questions, suggestions, or found a bug? I'd love to hear from you! 
-              Your feedback helps make SettleUp Smart better for everyone.
+              Your feedback helps make HisabKitab better for everyone.
             </p>            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               <Button 
                 variant="outline" 
@@ -188,12 +188,12 @@ const About = () => {
               <h4 className="font-semibold text-yellow-800 mb-2">Support & Feature Requests</h4>
               <p className="text-yellow-700 text-sm">
                 If you encounter any issues or have ideas for new features, please don't hesitate to reach out. 
-                I'm committed to continuously improving SettleUp Smart based on user feedback.
+                I'm committed to continuously improving HisabKitab based on user feedback.
               </p>
             </div>
               <div className="text-center pt-4">
               <p className="text-gray-600 text-sm">
-                Thank you for using SettleUp Smart! 🙏
+                Thank you for using HisabKitab! 🙏
               </p>
               <p className="text-gray-500 text-xs mt-2">
                 Made with ❤️ by Nisham Ghimire

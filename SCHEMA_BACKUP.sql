@@ -1,4 +1,4 @@
--- SettleUp Smart - Complete Database Schema Backup
+-- HisabKitab - Complete Database Schema Backup
 -- Date: 2025-06-17
 -- This file contains all the essential SQL migrations and functions used in the application
 

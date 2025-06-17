@@ -1,4 +1,4 @@
-# SettleUp Smart
+# HisabKitab
 
 A modern expense tracking application for groups and trips. Split expenses, track balances, and settle debts with ease.
 
@@ -22,7 +22,7 @@ A modern expense tracking application for groups and trips. Split expenses, trac
 
 ```bash
 git clone <YOUR_GIT_URL>
-cd settleup-smart
+cd hisabkitab
 npm install
 npm run dev
 ```
