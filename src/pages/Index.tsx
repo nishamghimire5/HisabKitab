@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Users, Calculator, TrendingUp, BookOpen, Info } from "lucide-react";
+import { Plus, Users, Calculator, TrendingUp, BookOpen, Info, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +17,7 @@ import { toast } from "sonner";
 const Index = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -175,34 +176,128 @@ const Index = () => {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gradient-bg">
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
+            <div className="flex flex-col h-full">
+              {/* Mobile Menu Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <img src="/logo.jpg" alt="HisabKitab" className="h-8 w-8" />
+                  <span className="text-lg font-bold gradient-text-primary">HisabKitab</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+                {/* Mobile Menu Content */}
+              <div className="flex-1 py-6">
+                <nav className="space-y-2 px-4">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-left h-12"
+                    onClick={() => {
+                      navigate('/docs');
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <BookOpen className="w-5 h-5 mr-3" />
+                    User Guide
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-left h-12"
+                    onClick={() => {
+                      navigate('/about');
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <Info className="w-5 h-5 mr-3" />
+                    About & Contact
+                  </Button>
+                </nav>
+                
+                {/* Mobile Components */}
+                <div className="px-4 mt-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Notifications</span>
+                    <InvitationNotifications />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Friends</span>
+                    <FriendsManager />
+                  </div>
+                </div>
+                
+                {/* Mobile Actions */}
+                <div className="px-4 mt-8 space-y-4">
+                  <Button 
+                    onClick={() => {
+                      setIsCreateModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-gradient-primary hover:shadow-glow text-white shadow-soft transition-all duration-300 rounded-xl font-semibold h-12"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Create New Trip
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Beautiful Modern Header */}
       <div className="relative bg-gradient-to-br from-slate-50 via-blue-50/70 to-indigo-100/80 border-b border-white/20">
         <div className="absolute inset-0 opacity-40">
           <div className="w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
         </div>
         <div className="relative">
-          <div className="container mx-auto px-4 py-3 md:py-4">
+          <div className="container mx-auto px-3 md:px-4 py-3 md:py-4">
             <div className="flex items-center justify-between">
+              {/* Mobile Menu Button */}
+              <div className="flex items-center gap-3 md:hidden">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                  className="rounded-lg"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              {/* Logo */}
               <div 
-                className="cursor-pointer flex-shrink-0 group transition-all duration-200 hover:scale-105"
+                className="cursor-pointer flex-shrink-0 group transition-all duration-200 hover:scale-105 md:flex-1"
                 onClick={() => navigate('/')}
-              >                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 flex items-center justify-center">
-                    <img src="/logo.jpg" alt="HisabKitab Logo" className="h-12 w-12" />
+              >
+                <div className="flex items-center space-x-2 md:space-x-3">
+                  <div className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center">
+                    <img src="/logo.jpg" alt="HisabKitab Logo" className="h-8 w-8 md:h-12 md:w-12" />
                   </div>
-                  <div>
-                    <h1 className="text-xl md:text-2xl font-display font-bold gradient-text-primary">
+                  <div className="hidden sm:block">
+                    <h1 className="text-lg md:text-xl lg:text-2xl font-display font-bold gradient-text-primary">
                       HisabKitab
                     </h1>
-                    <p className="text-gray-600 text-xs md:text-sm font-medium">Smart expense splitting made simple</p>
+                    <p className="text-gray-600 text-xs md:text-sm font-medium hidden md:block">Smart expense splitting made simple</p>
                   </div>
                 </div>
               </div>
 
-              <div className="hidden lg:flex items-center gap-2">                <Button 
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-2">
+                <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/docs')}
@@ -222,13 +317,16 @@ const Index = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center gap-2 md:gap-4">
-                <InvitationNotifications />
-                <FriendsManager />
+              {/* Right Side Actions */}
+              <div className="flex items-center gap-1 md:gap-2 lg:gap-4">
+                <div className="hidden sm:flex items-center gap-1 md:gap-2">
+                  <InvitationNotifications />
+                  <FriendsManager />
+                </div>
                 <Button 
                   onClick={() => setIsCreateModalOpen(true)}
                   size="sm"
-                  className="bg-gradient-primary hover:shadow-glow text-white shadow-soft transition-all duration-300 transform hover:scale-105 rounded-xl font-semibold"
+                  className="hidden sm:flex bg-gradient-primary hover:shadow-glow text-white shadow-soft transition-all duration-300 transform hover:scale-105 rounded-xl font-semibold px-2 md:px-4"
                 >
                   <Plus className="w-4 h-4 md:mr-2" />
                   <span className="hidden md:inline">New Trip</span>
@@ -238,11 +336,9 @@ const Index = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
+      </div><div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Shared Trips Section */}
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <SharedTrips myTrips={trips} onDeleteTrip={handleDeleteTrip} />
         </div>
         

@@ -56,26 +56,15 @@ const UserMenu = () => {
         <Button variant="ghost" size="icon" className="rounded-full">
           <User className="h-5 w-5" />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      </DropdownMenuTrigger>      <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-1.5">
           <p className="text-sm font-medium">{displayName}</p>
           {username && (
             <p className="text-xs text-blue-600">@{username}</p>
           )}
-          <p className="text-xs text-gray-500">{user?.email}</p>        </div>
-        <DropdownMenuSeparator />
-        <div className="lg:hidden">
-          <DropdownMenuItem onClick={() => navigate('/docs')}>
-            <BookOpen className="mr-2 h-4 w-4" />
-            User Guide
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/about')}>
-            <Info className="mr-2 h-4 w-4" />
-            About & Contact
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <p className="text-xs text-gray-500">{user?.email}</p>
         </div>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setIsProfileModalOpen(true)}>
           <Settings className="mr-2 h-4 w-4" />
           Profile Settings
