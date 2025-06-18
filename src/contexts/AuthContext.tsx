@@ -6,8 +6,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string, username?: string) => Promise<{ error: any }>;
+  signIn: (emailOrUsername: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
@@ -46,26 +46,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
+  const signUp = async (email: string, password: string, fullName?: string, username?: string) => {
+    // First check if username is already taken (if provided)
+    if (username) {
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.toLowerCase())
+        .single();
+      
+      if (existingUser) {
+        return { error: { message: 'Username is already taken. Please choose a different one.' } };
+      }
+    }
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
     // Use the current window location for redirect
     const redirectUrl = window.location.origin;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName || '',
+          username: username || '',
         }
       }
     });
     
+    // If signup successful and username provided, update the profile
+    if (!error && data.user && username) {
+      // The profile should be created automatically by the trigger, 
+      // but we'll update it with the username
+      await supabase
+        .from('profiles')
+        .update({ username: username.toLowerCase() })
+        .eq('id', data.user.id);
+    }
+    
     return { error };
   };
+  const signIn = async (emailOrUsername: string, password: string) => {
+    let email = emailOrUsername;
+    
+    // Check if the input is a username (no @ symbol) or email
+    if (!emailOrUsername.includes('@')) {
+      // It's a username, so we need to find the email
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', emailOrUsername.toLowerCase())
+        .single();
+      
+      if (profileError || !profile) {
+        return { error: { message: 'Username not found. Please check your username or sign up.' } };
+      }
+      
+      email = profile.email;
+    }
 
-  const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,

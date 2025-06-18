@@ -9,9 +9,11 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
@@ -19,7 +21,6 @@ const Auth = () => {
   const { signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -27,14 +28,14 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(emailOrUsername, password);
         if (error) {
           if (error.message.includes('Email not confirmed')) {
             setNeedsConfirmation(true);
-            setConfirmationEmail(email);
+            setConfirmationEmail(emailOrUsername.includes('@') ? emailOrUsername : email);
             toast.error('Please check your email and click the confirmation link to verify your account.');
           } else if (error.message.includes('Invalid login credentials')) {
-            toast.error('Invalid email or password. Please check your credentials and try again.');
+            toast.error('Invalid credentials. Please check your email/username and password.');
           } else {
             toast.error(error.message);
           }
@@ -43,10 +44,28 @@ const Auth = () => {
           navigate('/');
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        // Validate signup fields
+        if (!email || !password || !fullName || !username) {
+          toast.error('Please fill in all required fields.');
+          return;
+        }
+
+        if (username.length < 3) {
+          toast.error('Username must be at least 3 characters long.');
+          return;
+        }
+
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+          toast.error('Username can only contain letters, numbers, and underscores.');
+          return;
+        }
+
+        const { error } = await signUp(email, password, fullName, username);
         if (error) {
           if (error.message.includes('User already registered')) {
             toast.error('An account with this email already exists. Please sign in instead.');
+          } else if (error.message.includes('Username is already taken')) {
+            toast.error('This username is already taken. Please choose a different one.');
           } else {
             toast.error(error.message);
           }
@@ -158,9 +177,8 @@ const Auth = () => {
             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center">
               <div className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent text-lg font-bold tracking-wide">
                 HisabKitab
-              </div>
-              <div className="text-blue-200/80 text-sm mt-1 font-medium">
-                {isLogin ? 'Welcome back to smart expense tracking' : 'Join thousands managing expenses smartly'}
+              </div>              <div className="text-blue-200/80 text-sm mt-1 font-medium">
+                {isLogin ? 'Sign in with email or username' : 'Create account with unique username'}
               </div>
             </div>
           </div>
@@ -177,10 +195,9 @@ const Auth = () => {
               <div className="text-center mt-3">
                 <div className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 bg-clip-text text-transparent text-lg font-bold tracking-wide">
                   HisabKitab
-                </div>
-                <div className="text-blue-200/80 text-sm mt-1 font-medium">
-                  {isLogin ? 'Welcome back!' : 'Join us today!'}
-                </div>
+                </div>                    <div className="text-blue-200/80 text-sm mt-1 font-medium">
+                      {isLogin ? 'Sign in with email or username' : 'Create your account with username'}
+                    </div>
               </div>
             </div>
           )}
@@ -277,34 +294,66 @@ const Auth = () => {
                   </div>
                 </div>
               )}
-              
-              {!isLogin && (
+                {!isLogin && (
+                <>
+                  <div>
+                    <h3 className="text-blue-300 mb-2">Full Name</h3>
+                    <Input
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required={!isLogin}
+                      className="bg-blue-900/30 border-blue-500/30 text-blue-100 placeholder:text-blue-400/50 
+                              focus:border-cyan-400/50 focus:ring-cyan-400/20 h-12 text-base"
+                    />
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-blue-300 mb-2">Username</h3>
+                    <Input
+                      type="text"
+                      placeholder="Choose a unique username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                      required={!isLogin}
+                      minLength={3}
+                      pattern="[a-zA-Z0-9_]+"
+                      className="bg-blue-900/30 border-blue-500/30 text-blue-100 placeholder:text-blue-400/50 
+                              focus:border-cyan-400/50 focus:ring-cyan-400/20 h-12 text-base"
+                    />
+                    <p className="text-xs text-blue-400/70 mt-1">3+ characters, letters, numbers, and underscores only</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-blue-300 mb-2">Email</h3>
+                    <Input
+                      type="email"
+                      placeholder="Enter your email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required={!isLogin}
+                      className="bg-blue-900/30 border-blue-500/30 text-blue-100 placeholder:text-blue-400/50 
+                               focus:border-cyan-400/50 focus:ring-cyan-400/20 h-12 text-base"
+                    />
+                  </div>
+                </>
+              )}
+
+              {isLogin && (
                 <div>
-                  <h3 className="text-blue-300 mb-2">Full Name</h3>
+                  <h3 className="text-blue-300 mb-2">Email or Username</h3>
                   <Input
                     type="text"
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required={!isLogin}
+                    placeholder="Enter your email or username"
+                    value={emailOrUsername}
+                    onChange={(e) => setEmailOrUsername(e.target.value)}
+                    required={isLogin}
                     className="bg-blue-900/30 border-blue-500/30 text-blue-100 placeholder:text-blue-400/50 
-                            focus:border-cyan-400/50 focus:ring-cyan-400/20 h-12 text-base"
+                             focus:border-cyan-400/50 focus:ring-cyan-400/20 h-12 text-base"
                   />
                 </div>
               )}
-              
-              <div>
-                <h3 className="text-blue-300 mb-2">Email</h3>
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-blue-900/30 border-blue-500/30 text-blue-100 placeholder:text-blue-400/50 
-                           focus:border-cyan-400/50 focus:ring-cyan-400/20 h-12 text-base"
-                />
-              </div>
               <div>
                 <h3 className="text-blue-300 mb-2">Password</h3>
                 <div className="relative">
@@ -372,14 +421,16 @@ const Auth = () => {
               
               {/* Switch between login and signup */}
               <div className="text-center">
-                <Button
-                  variant="link"
+                <Button                  variant="link"
                   onClick={() => {
                     setIsLogin(!isLogin);
                     setNeedsConfirmation(false);
+                    setEmailOrUsername('');
                     setEmail('');
                     setPassword('');
-                    setFullName('');                  }}
+                    setFullName('');
+                    setUsername('');
+                  }}
                   className="text-blue-300 hover:text-cyan-400 transition-colors text-sm"
                 >
                   {isLogin 
@@ -388,17 +439,16 @@ const Auth = () => {
                   }
                 </Button>
               </div>
-              
-              {isLogin && (
+                {isLogin && (
                 <div className="text-center">
                   <Button
                     variant="link"
                     onClick={() => {
-                      if (email) {
-                        setConfirmationEmail(email);
+                      if (emailOrUsername.includes('@')) {
+                        setConfirmationEmail(emailOrUsername);
                         setNeedsConfirmation(true);
                       } else {
-                        toast.error('Please enter your email address first');
+                        toast.error('Please enter your email address to verify');
                       }
                     }}
                     className="text-xs text-blue-300/70 hover:text-cyan-400"
