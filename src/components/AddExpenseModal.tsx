@@ -1,14 +1,15 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trip, Expense, PaymentShare, ParticipantShare } from "@/types/Trip";
-import { Trash2, Plus } from "lucide-react";
+import { Trip, Expense, PaymentShare, ParticipantShare, GuestMember } from "@/types/Trip";
+import { Trash2, Plus, UserPlus } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/utils/currency";
+import { Separator } from "@/components/ui/separator";
+import GuestMemberManager from "./GuestMemberManager";
 
 interface AddExpenseModalProps {
   open: boolean;
@@ -23,10 +24,38 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
   const [payers, setPayers] = useState<PaymentShare[]>([{ member: "", amount: 0 }]);
   const [splitType, setSplitType] = useState<'equal' | 'custom'>('equal');
   const [equalParticipants, setEqualParticipants] = useState<string[]>([]);
-  const [customParticipants, setCustomParticipants] = useState<ParticipantShare[]>(
-    trip.members.map(member => ({ member, amount: 0 }))
-  );
-  const [showQuickPaid, setShowQuickPaid] = useState(false);
+  const [customParticipants, setCustomParticipants] = useState<ParticipantShare[]>([]);
+  const [showQuickPaid, setShowQuickPaid] = useState(false);  // Local state for managing guest members within the modal
+  const [localTrip, setLocalTrip] = useState<Trip>(trip);
+  
+  // Reset local trip only when modal closes and reopens
+  useEffect(() => {
+    if (open) {
+      // Only reset when opening modal
+      setLocalTrip(trip);
+    }
+  }, [open]); // Remove trip from dependencies to prevent resets during guest additions
+  
+  // Get all available members (registered + guests)
+  const getAllMembers = () => {
+    const registeredMembers = localTrip.members.map(email => ({ id: email, name: email, isGuest: false }));
+    const guestMembers = (localTrip.guestMembers || []).map(guest => ({ id: guest.id, name: guest.name, isGuest: true }));
+    return [...registeredMembers, ...guestMembers];
+  };
+
+  const allMembers = getAllMembers();  // Initialize custom participants to include all members - only when modal opens
+  useEffect(() => {
+    if (open) {
+      const currentMembers = getAllMembers();
+      const initialParticipants = currentMembers.map(member => ({ 
+        member: member.id, 
+        amount: 0, 
+        isGuest: member.isGuest 
+      }));
+      setCustomParticipants(initialParticipants);
+    }
+  }, [open]); // Only depend on modal open state
+
   // Quick "Paid by One, Split to All" function
   const handleQuickPaidByOne = (payer: string) => {
     if (!totalAmount) {
@@ -35,23 +64,64 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
     }
     
     const amount = parseFloat(totalAmount);
+    const payerMember = allMembers.find(m => m.id === payer);
     
     // Set the payer
-    setPayers([{ member: payer, amount: amount }]);
+    setPayers([{ member: payer, amount: amount, isGuest: payerMember?.isGuest }]);
     
     // Set equal split for all members
     setSplitType('equal');
-    setEqualParticipants([...trip.members]);
+    setEqualParticipants(allMembers.map(m => m.id));
     
     // Hide the quick options and show success feedback
     setShowQuickPaid(false);
+  };
+
+  // Helper function to get display name for a member
+  const getDisplayName = (memberId: string) => {
+    const member = allMembers.find(m => m.id === memberId);
+    if (!member) return memberId;
+    
+    if (member.isGuest) {
+      return member.name;
+    } else {
+      // For registered users, show email for now (could be enhanced with profiles)
+      return member.name.split('@')[0];    }
+  };  // Guest member management handlers
+  const handleAddGuest = (guest: GuestMember) => {
+    // Only update local state, don't propagate to parent until expense is saved
+    const updatedTrip = {
+      ...localTrip,
+      guestMembers: [...(localTrip.guestMembers || []), guest]
+    };
+    setLocalTrip(updatedTrip);
+    
+    // Add the new guest to custom participants without resetting others
+    setCustomParticipants(prev => [
+      ...prev,
+      { member: guest.id, amount: 0, isGuest: true }
+    ]);
+  };
+
+  const handleRemoveGuest = (guestId: string) => {
+    // Only update local state, don't propagate to parent until expense is saved
+    const updatedTrip = {
+      ...localTrip,
+      guestMembers: (localTrip.guestMembers || []).filter(guest => guest.id !== guestId)
+    };
+    setLocalTrip(updatedTrip);
+    
+    // Remove the guest from custom participants
+    setCustomParticipants(prev => 
+      prev.filter(p => p.member !== guestId)
+    );
   };
 
   // Check if quick setup was used
   const isQuickSetup = payers.length === 1 && 
                       payers[0].amount === parseFloat(totalAmount || "0") && 
                       splitType === 'equal' && 
-                      equalParticipants.length === trip.members.length;
+                      equalParticipants.length === allMembers.length;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,13 +149,16 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
     if (splitType === 'equal') {
       if (equalParticipants.length === 0) {
         alert("Please select at least one participant for equal split.");
-        return;
-      }
+        return;      }
       const amountPerPerson = parseFloat(totalAmount) / equalParticipants.length;
-      participants = equalParticipants.map(member => ({
-        member,
-        amount: amountPerPerson
-      }));
+      participants = equalParticipants.map(memberId => {
+        const member = allMembers.find(m => m.id === memberId);
+        return {
+          member: memberId,
+          amount: amountPerPerson,
+          isGuest: member?.isGuest
+        };
+      });
       totalSplit = parseFloat(totalAmount);
     } else {
       const validCustomParticipants = customParticipants.filter(p => p.amount > 0);
@@ -110,22 +183,18 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
       participants: participants,
       date: new Date().toISOString(),
       splitType: splitType
-    };
-
-    const updatedTrip = {
-      ...trip,
-      expenses: [...trip.expenses, newExpense]
-    };
-
-    onUpdateTrip(updatedTrip);
-
+    };    const updatedTrip = {
+      ...localTrip, // Use localTrip to include any guest members added
+      expenses: [...localTrip.expenses, newExpense]
+    };    onUpdateTrip(updatedTrip);
+    
     // Reset form
     setDescription("");
     setTotalAmount("");
     setPayers([{ member: "", amount: 0 }]);
     setSplitType('equal');
     setEqualParticipants([]);
-    setCustomParticipants(trip.members.map(member => ({ member, amount: 0 })));
+    // Don't reset customParticipants here since it will be reset when modal reopens
     onOpenChange(false);
   };
 
@@ -136,12 +205,11 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
       setEqualParticipants(equalParticipants.filter(p => p !== member));
     }
   };
-
   const handleSelectAllEqual = () => {
-    if (equalParticipants.length === trip.members.length) {
+    if (equalParticipants.length === allMembers.length) {
       setEqualParticipants([]);
     } else {
-      setEqualParticipants([...trip.members]);
+      setEqualParticipants(allMembers.map(m => m.id));
     }
   };
 
@@ -154,17 +222,18 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
       setPayers(payers.filter((_, i) => i !== index));
     }
   };
-
   const updatePayer = (index: number, field: 'member' | 'amount', value: string | number) => {
     const updatedPayers = [...payers];
     if (field === 'member') {
       updatedPayers[index].member = value as string;
+      // Set the isGuest flag based on the selected member
+      const selectedMember = allMembers.find(m => m.id === value);
+      updatedPayers[index].isGuest = selectedMember?.isGuest;
     } else {
       updatedPayers[index].amount = parseFloat(value as string) || 0;
     }
     setPayers(updatedPayers);
   };
-
   const updateCustomParticipant = (member: string, amount: number) => {
     setCustomParticipants(prev => 
       prev.map(p => p.member === member ? { ...p, amount } : p)
@@ -229,20 +298,19 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
                 <div className="space-y-3">
                   <p className="text-xs text-gray-600">
                     Click on who paid the full amount. Everyone will be included in equal split automatically.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {trip.members.map((member) => (
+                  </p>                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {allMembers.map((member) => (
                       <Button
-                        key={member}
+                        key={member.id}
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => handleQuickPaidByOne(member)}
+                        onClick={() => handleQuickPaidByOne(member.id)}
                         className="justify-start hover:bg-blue-100 hover:border-blue-300 transition-all text-xs sm:text-sm truncate"
-                        title={`${member} paid ${formatCurrency(parseFloat(totalAmount))}`}
+                        title={`${getDisplayName(member.id)} paid ${formatCurrency(parseFloat(totalAmount))}`}
                       >
                         <span className="truncate">
-                          {member} paid {formatCurrency(parseFloat(totalAmount))}
+                          {getDisplayName(member.id)} {member.isGuest ? "(Guest)" : ""} paid {formatCurrency(parseFloat(totalAmount))}
                         </span>
                       </Button>
                     ))}
@@ -254,9 +322,8 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
           {isQuickSetup && totalAmount && (
             <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
               <div className="flex items-start sm:items-center gap-2 text-green-700">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-1 sm:mt-0 flex-shrink-0"></div>
-                <span className="text-xs sm:text-sm font-medium leading-relaxed">
-                  Quick Setup: {payers[0]?.member} paid {formatCurrency(parseFloat(totalAmount))}, split equally among {trip.members.length} members ({formatCurrency(parseFloat(totalAmount) / trip.members.length)} each)
+                <div className="w-2 h-2 bg-green-500 rounded-full mt-1 sm:mt-0 flex-shrink-0"></div>                <span className="text-xs sm:text-sm font-medium leading-relaxed">
+                  Quick Setup: {getDisplayName(payers[0]?.member)} paid {formatCurrency(parseFloat(totalAmount))}, split equally among {allMembers.length} members ({formatCurrency(parseFloat(totalAmount) / allMembers.length)} each)
                 </span>
               </div>
             </div>
@@ -287,15 +354,14 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
                           value={payer.member}
                           onChange={(e) => updatePayer(index, 'member', e.target.value)}
                           className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs sm:text-sm"
-                          required
-                        >
+                          required                        >
                           <option value="">Select who paid</option>
-                          {trip.members.map((member) => (
-                            <option key={member} value={member}>
-                              {member.length > 20 ? member.substring(0, 20) + '...' : member}
+                          {allMembers.map((member) => (
+                            <option key={member.id} value={member.id}>
+                              {getDisplayName(member.id)} {member.isGuest ? "(Guest)" : ""}
                             </option>
                           ))}
-                        </select>                      </TableCell>
+                        </select></TableCell>
                       <TableCell>
                         <Input
                           type="number"
@@ -367,7 +433,25 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
                 <span className="text-sm">Custom Split</span>
               </label>
             </div>
-          </div>          {/* Equal Split */}
+          </div>
+
+          {/* Guest Member Management */}
+          <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-3 sm:p-4 rounded-xl border border-orange-200">
+            <div className="flex items-center gap-2 mb-3">
+              <UserPlus className="w-4 h-4 text-orange-600" />
+              <h3 className="text-xs sm:text-sm font-semibold text-orange-700">Add Temporary Members</h3>
+            </div>
+            <p className="text-xs text-orange-600 mb-3">
+              Need to include someone who doesn't have an account? Add them here temporarily.
+            </p>
+            <GuestMemberManager
+              guestMembers={localTrip.guestMembers || []}
+              onAddGuest={handleAddGuest}
+              onRemoveGuest={handleRemoveGuest}
+            />
+          </div>
+
+          {/* Equal Split */}
           {splitType === 'equal' && (
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -377,22 +461,21 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
                   variant="outline"
                   size="sm"
                   onClick={handleSelectAllEqual}
-                  className="self-start sm:self-auto"
-                >
-                  {equalParticipants.length === trip.members.length ? "Deselect All" : "Select All"}
+                  className="self-start sm:self-auto"                >
+                  {equalParticipants.length === allMembers.length ? "Deselect All" : "Select All"}
                 </Button>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {trip.members.map((member) => (
-                  <div key={member} className="flex items-center space-x-2">
+                {allMembers.map((member) => (
+                  <div key={member.id} className="flex items-center space-x-2">
                     <Checkbox
-                      id={`equal-${member}`}
-                      checked={equalParticipants.includes(member)}
-                      onCheckedChange={(checked) => handleEqualParticipantToggle(member, checked as boolean)}
+                      id={`equal-${member.id}`}
+                      checked={equalParticipants.includes(member.id)}
+                      onCheckedChange={(checked) => handleEqualParticipantToggle(member.id, checked as boolean)}
                     />
-                    <Label htmlFor={`equal-${member}`} className="text-xs sm:text-sm truncate" title={member}>
-                      {member.length > 25 ? member.substring(0, 25) + '...' : member}
+                    <Label htmlFor={`equal-${member.id}`} className="text-xs sm:text-sm truncate" title={getDisplayName(member.id)}>
+                      {getDisplayName(member.id)} {member.isGuest ? "(Guest)" : ""}
                     </Label>
                   </div>
                 ))}
@@ -419,10 +502,9 @@ const AddExpenseModal = ({ open, onOpenChange, trip, onUpdateTrip }: AddExpenseM
                   </TableHeader>
                   <TableBody>
                     {customParticipants.map((participant) => (
-                      <TableRow key={participant.member}>
-                        <TableCell className="font-medium">
-                          <span className="text-xs sm:text-sm truncate block" title={participant.member}>
-                            {participant.member.length > 20 ? participant.member.substring(0, 20) + '...' : participant.member}
+                      <TableRow key={participant.member}>                        <TableCell className="font-medium">
+                          <span className="text-xs sm:text-sm truncate block" title={getDisplayName(participant.member)}>
+                            {getDisplayName(participant.member)} {participant.isGuest ? "(Guest)" : ""}
                           </span>
                         </TableCell>
                         <TableCell>

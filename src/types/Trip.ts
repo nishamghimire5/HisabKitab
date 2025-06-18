@@ -4,10 +4,18 @@ export interface Trip {
   name: string;
   description?: string;
   members: string[];
+  guestMembers?: GuestMember[]; // Temporary members without accounts
   expenses: Expense[];
   createdAt: string;
   created_by?: string;
   initialFriends?: string[]; // For friend selection during trip creation
+}
+
+export interface GuestMember {
+  id: string; // Temporary ID for guest
+  name: string; // Display name for the guest
+  isGuest: true; // Flag to identify guest members
+  createdAt: string;
 }
 
 export interface Expense {
@@ -22,13 +30,15 @@ export interface Expense {
 }
 
 export interface PaymentShare {
-  member: string;
+  member: string; // Can be email for registered users or guest ID for guests
   amount: number;
+  isGuest?: boolean; // Flag to identify if this is a guest payment
 }
 
 export interface ParticipantShare {
-  member: string;
+  member: string; // Can be email for registered users or guest ID for guests
   amount: number;
+  isGuest?: boolean; // Flag to identify if this is a guest participant
 }
 
 export interface Settlement {

@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Users } from "lucide-react";
-import { Trip } from "@/types/Trip";
+import { Trip, GuestMember } from "@/types/Trip";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import FriendsManager from "./FriendsManager";
+import GuestMemberManager from "./GuestMemberManager";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,7 @@ const CreateTripModal = ({ open, onOpenChange, onCreateTrip }: CreateTripModalPr
   const [description, setDescription] = useState("");
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [selectedFriendProfiles, setSelectedFriendProfiles] = useState<any[]>([]);
+  const [guestMembers, setGuestMembers] = useState<GuestMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
@@ -48,6 +50,14 @@ const CreateTripModal = ({ open, onOpenChange, onCreateTrip }: CreateTripModalPr
     fetchFriendProfiles();
   }, [selectedFriends]);
 
+  const handleAddGuest = (guest: GuestMember) => {
+    setGuestMembers([...guestMembers, guest]);
+  };
+
+  const handleRemoveGuest = (guestId: string) => {
+    setGuestMembers(guestMembers.filter(guest => guest.id !== guestId));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -61,13 +71,12 @@ const CreateTripModal = ({ open, onOpenChange, onCreateTrip }: CreateTripModalPr
       return;
     }
 
-    setIsLoading(true);
-
-    try {      // Create trip with only the creator as member for security
+    setIsLoading(true);    try {      // Create trip with only the creator as member for security
       const newTrip = {
         name: tripName.trim(),
         description: description.trim(),
         members: [user.email!], // Only creator initially - friends will be invited
+        guestMembers: guestMembers, // Include guest members
         expenses: [],
         initialFriends: selectedFriends // Pass selected friends for invitation after creation
       };
@@ -77,12 +86,20 @@ const CreateTripModal = ({ open, onOpenChange, onCreateTrip }: CreateTripModalPr
       setDescription("");
       setSelectedFriends([]);
       setSelectedFriendProfiles([]);
+      setGuestMembers([]);
       
-      if (selectedFriends.length > 0) {
-        toast.success(`Trip created! Invitations will be sent to ${selectedFriends.length} friend(s).`);
+      let successMessage = "Trip created!";
+      if (selectedFriends.length > 0 && guestMembers.length > 0) {
+        successMessage = `Trip created! Invitations will be sent to ${selectedFriends.length} friend(s). ${guestMembers.length} temporary member(s) added.`;
+      } else if (selectedFriends.length > 0) {
+        successMessage = `Trip created! Invitations will be sent to ${selectedFriends.length} friend(s).`;
+      } else if (guestMembers.length > 0) {
+        successMessage = `Trip created! ${guestMembers.length} temporary member(s) added.`;
       } else {
-        toast.success("Trip created! Use 'Manage Members' to invite others securely.");
-      }    } catch (error) {
+        successMessage = "Trip created! Use 'Manage Members' to invite others or add temporary members.";
+      }
+      
+      toast.success(successMessage);    } catch (error) {
       // Error creating trip
       toast.error('Failed to create trip');
     } finally {
@@ -144,15 +161,23 @@ const CreateTripModal = ({ open, onOpenChange, onCreateTrip }: CreateTripModalPr
                   </Badge>
                 ))}
               </div>
-            )}
-          </div>
+            )}          </div>
+
+          <Separator />
+
+          {/* Guest Member Management */}
+          <GuestMemberManager
+            guestMembers={guestMembers}
+            onAddGuest={handleAddGuest}
+            onRemoveGuest={handleRemoveGuest}
+          />
 
           {/* Security Notice */}
           <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5" />
             <div className="text-xs text-blue-700">
               <p className="font-medium">Secure Trip Creation</p>
-              <p>You'll be added as the trip owner. After creation, use "Manage Members" to send secure invitations to others.</p>
+              <p>You'll be added as the trip owner. Temporary members can be removed later if not needed.</p>
             </div>
           </div>
 

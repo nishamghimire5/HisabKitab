@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, UserMinus, Send, AlertCircle, Mail, UserPlus } from "lucide-react";
-import { Trip } from "@/types/Trip";
+import { Trip, GuestMember } from "@/types/Trip";
 import TripInvitationModal from "./TripInvitationModal";
 import FriendsManager from "./FriendsManager";
+import GuestMemberManager from "./GuestMemberManager";
 import { useUserProfiles } from "@/hooks/useUserProfiles";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -131,6 +132,60 @@ const TripMemberManagement = ({ open, onOpenChange, trip, onUpdateTrip }: TripMe
     return email.slice(0, 2).toUpperCase();
   };
 
+  const handleAddGuest = async (guest: GuestMember) => {
+    if (!isOwner) {
+      toast.error("Only the trip owner can add guest members");
+      return;
+    }    setLoading(true);    try {
+      const updatedGuestMembers = [...(trip.guestMembers || []), guest];
+      
+      // For now, just update locally (in a real app, would save to database)
+      const updatedTrip = { ...trip, guestMembers: updatedGuestMembers };
+      onUpdateTrip(updatedTrip);
+      toast.success(`${guest.name} added as temporary member`);
+    } catch (error) {
+      toast.error('Failed to add guest member');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveGuest = async (guestId: string) => {
+    if (!isOwner) {
+      toast.error("Only the trip owner can remove guest members");
+      return;
+    }
+
+    const guestToRemove = trip.guestMembers?.find(g => g.id === guestId);
+    if (!guestToRemove) return;
+
+    // Check if guest has expenses
+    const hasExpenses = trip.expenses.some(expense => 
+      (Array.isArray(expense.paidBy) && expense.paidBy.some(p => p.member === guestId && p.isGuest)) ||
+      (Array.isArray(expense.participants) && expense.participants.some(p => 
+        p.member === guestId && p.isGuest
+      ))
+    );
+
+    if (hasExpenses) {
+      if (!confirm(`${guestToRemove.name} has expenses in this trip. Removing them may affect calculations. Continue?`)) {
+        return;
+      }
+    }
+
+    setLoading(true);    try {
+      const updatedGuestMembers = (trip.guestMembers || []).filter(guest => guest.id !== guestId);
+        // For now, just update locally (in a real app, would save to database)
+      const updatedTrip = { ...trip, guestMembers: updatedGuestMembers };
+      onUpdateTrip(updatedTrip);
+      toast.success(`${guestToRemove.name} removed from trip`);
+    } catch (error) {
+      toast.error('Failed to remove guest member');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
@@ -186,7 +241,45 @@ const TripMemberManagement = ({ open, onOpenChange, trip, onUpdateTrip }: TripMe
                 );
               })}
             </div>
-          </div>          {/* Add Members */}
+          </div>
+
+          {/* Guest Members */}
+          {(trip.guestMembers && trip.guestMembers.length > 0) && (
+            <div>
+              <h4 className="font-medium mb-3">Temporary Members ({trip.guestMembers.length})</h4>
+              <div className="space-y-2">
+                {trip.guestMembers.map((guest) => (
+                  <div key={guest.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback className="text-xs bg-orange-200 text-orange-800">
+                          {guest.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm">{guest.name}</p>
+                        <p className="text-xs text-gray-500">Temporary member</p>
+                      </div>
+                      <Badge variant="outline" className="text-xs border-orange-300 text-orange-700">Guest</Badge>
+                    </div>
+                    {isOwner && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveGuest(guest.id)}
+                        disabled={loading}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Add Members */}
           {isOwner ? (
             <div className="space-y-4">
               <h4 className="font-medium">Invite New Members</h4>
@@ -217,8 +310,16 @@ const TripMemberManagement = ({ open, onOpenChange, trip, onUpdateTrip }: TripMe
                     <Send className="w-4 h-4 mr-2" />
                     Invite {selectedFriends.length} Friend{selectedFriends.length > 1 ? 's' : ''}
                   </Button>
-                )}
-              </div>
+                )}              </div>
+              
+              <Separator />
+
+              {/* Guest Member Management */}
+              <GuestMemberManager
+                guestMembers={trip.guestMembers || []}
+                onAddGuest={handleAddGuest}
+                onRemoveGuest={handleRemoveGuest}
+              />
               
               <Separator />
               
