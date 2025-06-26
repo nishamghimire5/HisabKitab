@@ -1,10 +1,9 @@
-
-import { Trip, MemberBalance } from "@/types/Trip";
+import { Trip, MemberBalance, GuestMember } from "@/types/Trip";
 
 export const calculateMemberBalances = (trip: Trip): MemberBalance[] => {
   const balances: { [member: string]: MemberBalance } = {};
-  
-  // Initialize balances for all members
+
+  // Initialize balances for all registered and guest members
   trip.members.forEach(member => {
     balances[member] = {
       name: member,
@@ -12,6 +11,52 @@ export const calculateMemberBalances = (trip: Trip): MemberBalance[] => {
       totalOwed: 0,
       netBalance: 0
     };
+  });
+  if (trip.guestMembers) {
+    trip.guestMembers.forEach((guest: GuestMember) => {
+      balances[guest.id] = {
+        name: guest.id,
+        totalPaid: 0,
+        totalOwed: 0,
+        netBalance: 0
+      };
+    });
+  }
+
+  // Ensure all payers/participants are initialized (in case of missing from members/guestMembers)
+  trip.expenses.forEach(expense => {
+    if (Array.isArray(expense.paidBy)) {
+      expense.paidBy.forEach(payment => {
+        if (!balances[payment.member]) {
+          balances[payment.member] = {
+            name: payment.member,
+            totalPaid: 0,
+            totalOwed: 0,
+            netBalance: 0
+          };
+        }
+      });
+    } else if (expense.paidBy && !balances[expense.paidBy as string]) {
+      balances[expense.paidBy as string] = {
+        name: expense.paidBy as string,
+        totalPaid: 0,
+        totalOwed: 0,
+        netBalance: 0
+      };
+    }
+    if (Array.isArray(expense.participants)) {
+      expense.participants.forEach(participant => {
+        const memberId = typeof participant === 'string' ? participant : participant.member;
+        if (!balances[memberId]) {
+          balances[memberId] = {
+            name: memberId,
+            totalPaid: 0,
+            totalOwed: 0,
+            netBalance: 0
+          };
+        }
+      });
+    }
   });
 
   // Calculate total paid by each member
