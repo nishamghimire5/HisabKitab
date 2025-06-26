@@ -12,7 +12,7 @@ interface ExpenseListProps {
 }
 
 const ExpenseList = ({ trip, onUpdateTrip }: ExpenseListProps) => {
-  const { getDisplayName } = useUserProfiles(trip.members);
+  const { getDisplayName } = useUserProfiles(trip.members, trip.guestMembers);
   
   const handleDeleteExpense = (expenseId: string) => {
     if (confirm("Are you sure you want to delete this expense?")) {

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import { Trip } from "@/types/Trip";
@@ -14,7 +13,7 @@ interface SettlementSummaryProps {
 }
 
 const SettlementSummary = ({ trip }: SettlementSummaryProps) => {
-  const { getDisplayName } = useUserProfiles(trip.members);
+  const { getDisplayName } = useUserProfiles(trip.members, trip.guestMembers);
   const memberBalances = calculateMemberBalances(trip);
   const settlements = calculateSettlements([...memberBalances]);
   const totalExpenses = trip.expenses.reduce((sum, expense) => sum + expense.amount, 0);

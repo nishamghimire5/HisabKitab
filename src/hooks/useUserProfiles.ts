@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { GuestMember } from '@/types/Trip';
 
 export interface UserProfile {
   id: string;
@@ -9,7 +10,7 @@ export interface UserProfile {
   avatar_url: string | null;
 }
 
-export const useUserProfiles = (emails: string[] = []) => {
+export const useUserProfiles = (emails: string[] = [], guestMembers?: GuestMember[]) => {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,12 +44,19 @@ export const useUserProfiles = (emails: string[] = []) => {
     fetchProfiles();
   }, [Array.isArray(emails) ? emails.join(',') : '']);
 
-  const getDisplayName = (email: string): string => {
-    const profile = profiles.find(p => p.email === email);
-    if (profile) {
-      return profile.full_name || profile.username || email.split('@')[0];
+  const getDisplayName = (idOrEmail: string): string => {
+    // Check guest members first
+    if (guestMembers && Array.isArray(guestMembers)) {
+      const guest = guestMembers.find(g => g.id === idOrEmail);
+      if (guest) return guest.name;
     }
-    return email.split('@')[0]; // Fallback to email prefix
+    // Fallback to registered user logic
+    const profile = profiles.find(p => p.email === idOrEmail || p.id === idOrEmail);
+    if (profile) {
+      return profile.full_name || profile.username || (profile.email ? profile.email.split('@')[0] : idOrEmail);
+    }
+    // Fallback to email prefix or ID
+    return idOrEmail.split('@')[0] || idOrEmail;
   };
   const getUserProfile = (email: string): UserProfile | null => {
     return profiles.find(p => p.email === email) || null;
